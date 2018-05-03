@@ -20136,6 +20136,67 @@ db_string_reverse (const DB_VALUE * src_str, DB_VALUE * result_str)
   return error_status;
 }
 
+int
+db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
+  int error_status = NO_ERROR;
+  DB_TYPE str_type;
+  bool res = true;
+  int len = db_get_string_size(src_str);
+  int i;
+  unsigned char* str = (unsigned char *)db_get_string(src_str);
+
+  /*
+  *  Assert that DB_VALUE structures have been allocated.
+  */
+  assert(src_str != (DB_VALUE *)NULL);
+  assert(result_str != (DB_VALUE *)NULL);
+
+  /*
+  *  Categorize the two input parameters and check for errors.
+  *    Verify that the parameters are both character strings.
+  */
+
+  str_type = DB_VALUE_DOMAIN_TYPE(src_str);
+  if (DB_IS_NULL(src_str))
+  {
+    db_make_null(result_str);
+  }
+  else if (!QSTR_IS_ANY_CHAR(str_type))
+  {
+    error_status = ER_QSTR_INVALID_DATA_TYPE;
+  }
+  /*
+  *  If the input parameters have been properly validated, then
+  *  we are ready to operate.
+  */
+  else
+  {
+    //correct case:
+
+    //res = (char *)db_private_alloc(NULL, db_get_string_size(src_str) + 1);
+    if (res == NULL)
+    {
+      error_status = ER_OUT_OF_VIRTUAL_MEMORY;
+    }
+
+    if (error_status == NO_ERROR)
+    {
+      len = db_get_string_size(src_str);
+      for (i = 0; i < len/2; ++i) {
+        if (str[i] != str[len - i -1]) {
+          return db_make_int(result_str, false);
+        }
+
+      }
+      //memset(res, 0, db_get_string_size(src_str) + 1);
+      
+      db_make_int(result_str,true);
+    }
+  }
+
+  return error_status;
+}
+
 /*
  * add_and_normalize_date_time ()
  *

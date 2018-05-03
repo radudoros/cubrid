@@ -1539,6 +1539,7 @@ typedef enum
   PT_JSON_LENGTH,
   PT_JSON_DEPTH,
   PT_JSON_SEARCH,
+  PT_PALINDROME,
 
   /* This is the last entry. Please add a new one before it. */
   PT_LAST_OPCODE
@@ -1546,7 +1547,7 @@ typedef enum
 
 
 /* the virtual query mechanism needs to put oid columns on non-updatable
- * virtual query guys, hence the "trust me" part.
+ * virtual query guys, hence the "trust me" part.hence the "trust me" part.
  */
 typedef enum
 {

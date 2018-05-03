@@ -3662,6 +3662,8 @@ pt_show_binopcode (PT_OP_TYPE n)
       return "strcmp ";
     case PT_REVERSE:
       return "reverse ";
+    case PT_PALINDROME:
+        return "palindrome ";
     case PT_DISK_SIZE:
       return "disk_size ";
     case PT_LIKE_LOWER_BOUND:
@@ -11392,7 +11394,14 @@ pt_print_expr (PARSER_CONTEXT * parser, PT_NODE * p)
       break;
 
     case PT_REVERSE:
-      q = pt_append_nulstring (parser, q, " reverse(");
+      q = pt_append_nulstring(parser, q, " reverse(");
+      r1 = pt_print_bytes(parser, p->info.expr.arg1);
+      q = pt_append_varchar(parser, q, r1);
+      q = pt_append_nulstring(parser, q, ")");
+      break;
+
+    case PT_PALINDROME:
+      q = pt_append_nulstring (parser, q, " palindrome(");
       r1 = pt_print_bytes (parser, p->info.expr.arg1);
       q = pt_append_varchar (parser, q, r1);
       q = pt_append_nulstring (parser, q, ")");
@@ -17943,6 +17952,7 @@ pt_is_const_expr_node (PT_NODE * node)
 	case PT_MD5:
 	case PT_SHA_ONE:
 	case PT_REVERSE:
+  case PT_PALINDROME:
 	case PT_DISK_SIZE:
 	case PT_TO_BASE64:
 	case PT_FROM_BASE64:
@@ -18462,6 +18472,7 @@ pt_is_allowed_as_function_index (const PT_NODE * expr)
     case PT_MID:
     case PT_STRCMP:
     case PT_REVERSE:
+    case PT_PALINDROME:
     case PT_BIT_COUNT:
     case PT_MODULUS:
     case PT_FLOOR:
