@@ -20161,7 +20161,7 @@ db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
   {
     db_make_null(result_str);
   }
-  else if (!QSTR_IS_ANY_CHAR(str_type))
+  else if (!QSTR_IS_ANY_CHAR(str_type) && str_type != DB_TYPE_MULTISET)
   {
     error_status = ER_QSTR_INVALID_DATA_TYPE;
   }
@@ -20181,16 +20181,68 @@ db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
 
     if (error_status == NO_ERROR)
     {
-      len = db_get_string_size(src_str);
-      for (i = 0; i < len/2; ++i) {
-        if (str[i] != str[len - i -1]) {
-          return db_make_int(result_str, false);
-        }
+      bool result;
+      if (QSTR_IS_ANY_CHAR(str_type)) {
+        len = db_get_string_size(src_str);
+        for (i = 0; i < len / 2; ++i) {
+          if (str[i] != str[len - i - 1]) {
+            result = false;
+            break;
+          }
 
+        }
       }
-      //memset(res, 0, db_get_string_size(src_str) + 1);
-      
-      db_make_int(result_str,true);
+
+
+      if (str_type == DB_TYPE_MULTISET) {
+        DB_DATA data = src_str->data;
+        DB_COLLECTION * sett = (data.set);
+        len = db_seq_size(sett);
+        int card = db_seq_cardinality(sett);
+        result = true;
+
+        if (card == 1 || card == 0) {
+          result = true;
+        }
+        else {
+          DB_VALUE  last;
+          db_seq_get(sett, 0, &last);
+          DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE(&last);      
+          
+
+
+          for (int i = 1; i < card; ++i) {
+            DB_VALUE  crt;
+            db_seq_get(sett, i, &crt);
+
+
+            DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE(&crt);
+
+            if (!QSTR_IS_ANY_CHAR(crt_type)) {
+              error_status = ER_QSTR_INVALID_DATA_TYPE;
+            }
+
+            unsigned char* last_str = (unsigned char *)db_get_string(&last);
+            int len_last = db_get_string_size(&last);
+            unsigned char* crt_str = (unsigned char *)db_get_string(&crt);
+            int len_crt = db_get_string_size(&crt);
+            if (len_crt != len_last) {
+              result = false;
+              break;
+            }
+            for (int j = 0; j < len_crt;++j) {
+              if (last_str[j] != crt_str[j]) {
+                result = false;
+                break;
+              }
+            }
+
+
+          }
+        } 
+      }
+
+      db_make_int(result_str, result);
     }
   }
 

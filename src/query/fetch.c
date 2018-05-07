@@ -505,6 +505,7 @@ fetch_peek_arith (THREAD_ENTRY * thread_p, REGU_VARIABLE * regu_var, VAL_DESCR *
     case T_SLEEP:
     case T_CRC32:
     case T_CONV_TZ:
+    case T_PALINDROME:
       /* fetch rhs value */
       if (fetch_peek_dbval (thread_p, arithptr->rightptr, vd, NULL, obj_oid, tpl, &peek_right) != NO_ERROR)
 	{
@@ -2631,6 +2632,23 @@ fetch_peek_arith (THREAD_ENTRY * thread_p, REGU_VARIABLE * regu_var, VAL_DESCR *
 	{
 	  db_make_int (arithptr->value, 0);
 	}
+      break;
+
+    case T_PALINDROME:
+      if (DB_IS_NULL(peek_right))
+      {
+        PRIM_SET_NULL(arithptr->value);
+      }
+      else
+      {
+        if (DB_VALUE_DOMAIN_TYPE(peek_right) == DB_TYPE_MULTISET ) {
+          //ok
+        }
+        if (db_string_palindrome(peek_right, arithptr->value) != NO_ERROR)
+        {
+          goto error;
+        }
+      }
       break;
 
     case T_JSON_CONTAINS:

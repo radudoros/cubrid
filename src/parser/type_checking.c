@@ -1005,7 +1005,7 @@ pt_get_expression_definition (const PT_OP_TYPE op, EXPRESSION_DEFINITION * def)
     case PT_PALINDROME:
       num = 0;
 
-      /* one overload */
+      /* two overload */
 
       /* arg1 */
       sig.arg1_type.is_generic = true;
@@ -1013,7 +1013,18 @@ pt_get_expression_definition (const PT_OP_TYPE op, EXPRESSION_DEFINITION * def)
 
       /* return type */
       sig.return_type.is_generic = false;
-      sig.return_type.val.type = PT_TYPE_LOGICAL;
+      sig.return_type.val.type = PT_TYPE_INTEGER;
+
+      def->overloads[num++] = sig;
+
+      /*PALINDROME(MULTISET) */
+      /* arg1 */
+      sig.arg1_type.is_generic = false;
+      sig.arg1_type.val.type = PT_TYPE_MULTISET;
+
+      /* return type */
+      sig.return_type.is_generic = false;
+      sig.return_type.val.type = PT_TYPE_INTEGER;
 
       def->overloads[num++] = sig;
 
@@ -12522,9 +12533,12 @@ pt_upd_domain_info (PARSER_CONTEXT * parser, PT_NODE * arg1, PT_NODE * arg2, PT_
 
     case PT_CRC32:
     case PT_DISK_SIZE:
+      assert(dt == NULL);
+      dt = pt_make_prim_data_type(parser, PT_TYPE_INTEGER);
+      break;
     case PT_PALINDROME:
       assert (dt == NULL);
-      dt = pt_make_prim_data_type (parser, PT_TYPE_INTEGER);
+      dt = pt_make_prim_data_type (parser,  PT_TYPE_INTEGER);
       break;
 
     case PT_DEFAULTF:
@@ -15552,12 +15566,16 @@ pt_evaluate_db_value_expr (PARSER_CONTEXT * parser, PT_NODE * expr, PT_OP_TYPE o
       break;
 
     case PT_PALINDROME:
-      if (DB_IS_NULL(arg1))
+      if (DB_IS_NULL (arg1))
       {
         db_make_null(result);
       }
       else
       {
+        if (typ == PT_TYPE_MULTISET) {
+          return 0;
+        }
+
         if (db_string_palindrome(arg1, result) != NO_ERROR)
         {
           PT_ERRORc(parser, o1, er_msg());

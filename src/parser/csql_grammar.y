@@ -21245,7 +21245,7 @@ identifier
 			PARSER_SAVE_ERR_CONTEXT ($$, @$.buffer_pos)
 
 		DBG_PRINT}}
-	| REVERSE
+	| REVERSE 
 		{{
 
 			PT_NODE *p = parser_new_node (this_parser, PT_NAME);
