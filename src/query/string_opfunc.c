@@ -20213,7 +20213,7 @@ db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
             DB_VALUE crt;
             
             db_seq_get(sett, i, &crt);
-
+            crt.need_clear = true;
             DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE(&crt);
 
             if (!QSTR_IS_ANY_CHAR(crt_type)) {
