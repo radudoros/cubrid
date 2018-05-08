@@ -20183,6 +20183,7 @@ db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
     {
       bool result;
       if (QSTR_IS_ANY_CHAR(str_type)) {
+        result = true;
         len = db_get_string_size(src_str);
         for (i = 0; i < len / 2; ++i) {
           if (str[i] != str[len - i - 1]) {
@@ -20192,8 +20193,7 @@ db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
 
         }
       }
-
-
+      
       if (str_type == DB_TYPE_MULTISET) {
         DB_DATA data = src_str->data;
         DB_COLLECTION * sett = (data.set);
@@ -20207,18 +20207,17 @@ db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
         else {
           DB_VALUE  last;
           db_seq_get(sett, 0, &last);
-          DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE(&last);      
-          
-
-
+          DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE(&last);
+          last.need_clear = true;
           for (int i = 1; i < card; ++i) {
-            DB_VALUE  crt;
+            DB_VALUE crt;
+            
             db_seq_get(sett, i, &crt);
-
 
             DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE(&crt);
 
             if (!QSTR_IS_ANY_CHAR(crt_type)) {
+
               error_status = ER_QSTR_INVALID_DATA_TYPE;
             }
 
@@ -20228,17 +20227,19 @@ db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
             int len_crt = db_get_string_size(&crt);
             if (len_crt != len_last) {
               result = false;
+              db_value_clear(&crt);
               break;
             }
             for (int j = 0; j < len_crt;++j) {
               if (last_str[j] != crt_str[j]) {
                 result = false;
+                db_value_clear(&crt);
                 break;
               }
             }
-
-
+            db_value_clear(&crt);
           }
+          db_value_clear(&last);
         } 
       }
 

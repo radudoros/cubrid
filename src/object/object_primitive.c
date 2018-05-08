@@ -12244,6 +12244,7 @@ mr_setval_char (DB_VALUE * dest, const DB_VALUE * src, bool copy)
 
 	      /* make sure the copy gets a NULL terminator */
 	      new_ = (char *) db_private_alloc (NULL, src_length + 1);
+              er_print_callstack(ARG_FILE_LINE, "obj_prm: Traced pointer=%p\n", new_);
 	      if (new_ == NULL)
 		{
 		  assert (er_errid () != NO_ERROR);
