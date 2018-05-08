@@ -1000,8 +1000,7 @@ pt_get_expression_definition (const PT_OP_TYPE op, EXPRESSION_DEFINITION * def)
 
       def->overloads_count = num;
       break;
-
-    case PT_DATEF:
+  
     case PT_PALINDROME:
       num = 0;
 
@@ -1030,6 +1029,7 @@ pt_get_expression_definition (const PT_OP_TYPE op, EXPRESSION_DEFINITION * def)
 
       def->overloads_count = num;
       break;
+    case PT_DATEF:
     case PT_REVERSE:
 		
       num = 0;
@@ -12538,7 +12538,7 @@ pt_upd_domain_info (PARSER_CONTEXT * parser, PT_NODE * arg1, PT_NODE * arg2, PT_
       break;
     case PT_PALINDROME:
       assert (dt == NULL);
-      dt = pt_make_prim_data_type (parser,  PT_TYPE_INTEGER);
+      dt = pt_make_prim_data_type (parser, PT_TYPE_INTEGER);
       break;
 
     case PT_DEFAULTF:
@@ -15572,10 +15572,6 @@ pt_evaluate_db_value_expr (PARSER_CONTEXT * parser, PT_NODE * expr, PT_OP_TYPE o
       }
       else
       {
-        if (typ == PT_TYPE_MULTISET) {
-          return 0;
-        }
-
         if (db_string_palindrome(arg1, result) != NO_ERROR)
         {
           PT_ERRORc(parser, o1, er_msg());
