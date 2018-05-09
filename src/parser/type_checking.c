@@ -15544,7 +15544,7 @@ pt_evaluate_db_value_expr (PARSER_CONTEXT * parser, PT_NODE * expr, PT_OP_TYPE o
 	}
       break;
 
-    case PT_REVERSE:	
+    case PT_REVERSE:
       if (DB_IS_NULL (arg1))
 	{
 	  db_make_null (result);

@@ -17952,7 +17952,7 @@ pt_is_const_expr_node (PT_NODE * node)
 	case PT_MD5:
 	case PT_SHA_ONE:
 	case PT_REVERSE:
-  case PT_PALINDROME:
+	case PT_PALINDROME:
 	case PT_DISK_SIZE:
 	case PT_TO_BASE64:
 	case PT_FROM_BASE64:
