@@ -1547,7 +1547,7 @@ typedef enum
 
 
 /* the virtual query mechanism needs to put oid columns on non-updatable
- * virtual query guys, hence the "trust me" part.hence the "trust me" part.
+ * virtual query guys, hence the "trust me" part.
  */
 typedef enum
 {

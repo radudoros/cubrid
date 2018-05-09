@@ -7519,7 +7519,7 @@ pt_to_regu_variable (PARSER_CONTEXT * parser, PT_NODE * node, UNBOX unbox)
 		  break;
 
 		case PT_REVERSE:
-			regu = pt_make_regu_arith (r1, r2, NULL, T_REVERSE, domain);
+		  regu = pt_make_regu_arith (r1, r2, NULL, T_REVERSE, domain);
 		  break;
 
 		case PT_PALINDROME:
@@ -7919,7 +7919,7 @@ pt_to_regu_variable (PARSER_CONTEXT * parser, PT_NODE * node, UNBOX unbox)
 		case PT_SUBSTRING:
 		  regu = pt_make_regu_arith (r1, r2, r3, T_SUBSTRING, domain);
 		  pt_to_misc_operand (regu, node->info.expr.qualifier);
-                  break;
+			break;
 
 		case PT_SUBSTRING_INDEX:
 		  regu = pt_make_regu_arith (r1, r2, r3, T_SUBSTRING_INDEX, domain);

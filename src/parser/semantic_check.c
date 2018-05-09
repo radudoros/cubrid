@@ -5324,7 +5324,7 @@ pt_find_partition_column_count (PT_NODE * expr, PT_NODE ** name_node)
     case PT_MID:
     case PT_STRCMP:
     case PT_REVERSE:
-		case PT_PALINDROME:
+    case PT_PALINDROME:
     case PT_BIT_COUNT:
     case PT_ADDDATE:
     case PT_DATE_ADD:

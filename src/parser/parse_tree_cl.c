@@ -3663,7 +3663,7 @@ pt_show_binopcode (PT_OP_TYPE n)
     case PT_REVERSE:
       return "reverse ";
     case PT_PALINDROME:
-        return "palindrome ";
+      return "palindrome ";
     case PT_DISK_SIZE:
       return "disk_size ";
     case PT_LIKE_LOWER_BOUND:
@@ -11394,10 +11394,10 @@ pt_print_expr (PARSER_CONTEXT * parser, PT_NODE * p)
       break;
 
     case PT_REVERSE:
-      q = pt_append_nulstring(parser, q, " reverse(");
-      r1 = pt_print_bytes(parser, p->info.expr.arg1);
-      q = pt_append_varchar(parser, q, r1);
-      q = pt_append_nulstring(parser, q, ")");
+      q = pt_append_nulstring (parser, q, " reverse(");
+      r1 = pt_print_bytes (parser, p->info.expr.arg1);
+      q = pt_append_varchar (parser, q, r1);
+      q = pt_append_nulstring (parser, q, ")");
       break;
 
     case PT_PALINDROME:

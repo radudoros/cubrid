@@ -1000,7 +1000,6 @@ pt_get_expression_definition (const PT_OP_TYPE op, EXPRESSION_DEFINITION * def)
 
       def->overloads_count = num;
       break;
-  
     case PT_PALINDROME:
       num = 0;
 
@@ -1031,7 +1030,6 @@ pt_get_expression_definition (const PT_OP_TYPE op, EXPRESSION_DEFINITION * def)
       break;
     case PT_DATEF:
     case PT_REVERSE:
-		
       num = 0;
 
       /* one overload */
@@ -7026,7 +7024,7 @@ pt_is_symmetric_op (const PT_OP_TYPE op)
     case PT_LOCATE:
     case PT_MID:
     case PT_REVERSE:
-		case PT_PALINDROME:
+    case PT_PALINDROME:
     case PT_DISK_SIZE:
     case PT_ADDDATE:
     case PT_DATE_ADD:
@@ -12533,9 +12531,6 @@ pt_upd_domain_info (PARSER_CONTEXT * parser, PT_NODE * arg1, PT_NODE * arg2, PT_
 
     case PT_CRC32:
     case PT_DISK_SIZE:
-      assert(dt == NULL);
-      dt = pt_make_prim_data_type(parser, PT_TYPE_INTEGER);
-      break;
     case PT_PALINDROME:
       assert (dt == NULL);
       dt = pt_make_prim_data_type (parser, PT_TYPE_INTEGER);
@@ -15549,8 +15544,7 @@ pt_evaluate_db_value_expr (PARSER_CONTEXT * parser, PT_NODE * expr, PT_OP_TYPE o
 	}
       break;
 
-    case PT_REVERSE:
-	
+    case PT_REVERSE:	
       if (DB_IS_NULL (arg1))
 	{
 	  db_make_null (result);
@@ -22466,8 +22460,8 @@ pt_is_op_w_collation (const PT_OP_TYPE op)
     case PT_IF:
     case PT_FIELD:
     case PT_REVERSE:
-		case PT_PALINDROME:
-		case PT_CONNECT_BY_ROOT:
+    case PT_PALINDROME:
+    case PT_CONNECT_BY_ROOT:
     case PT_PRIOR:
     case PT_QPRIOR:
     case PT_INDEX_PREFIX:
@@ -24504,7 +24498,7 @@ coerce_result:
     case PT_TIMEF:
     case PT_IF:
     case PT_REVERSE:
-		case PT_PALINDROME:
+    case PT_PALINDROME:
     case PT_CONNECT_BY_ROOT:
     case PT_PRIOR:
     case PT_QPRIOR:

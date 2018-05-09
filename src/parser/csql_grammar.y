@@ -21245,7 +21245,7 @@ identifier
 			PARSER_SAVE_ERR_CONTEXT ($$, @$.buffer_pos)
 
 		DBG_PRINT}}
-	| REVERSE 
+	| REVERSE
 		{{
 
 			PT_NODE *p = parser_new_node (this_parser, PT_NAME);
@@ -21254,7 +21254,7 @@ identifier
 			$$ = p;
 			PARSER_SAVE_ERR_CONTEXT ($$, @$.buffer_pos)
 
-		DBG_PRINT}}		
+		DBG_PRINT}}
 	| PALINDROME
 		{{
 			PT_NODE *p = parser_new_node (this_parser, PT_NAME);
@@ -25584,7 +25584,7 @@ parser_keyword_func (const char *name, PT_NODE * args)
       return node;
 
     case PT_REVERSE:
-		case PT_PALINDROME:
+    case PT_PALINDROME:
     case PT_TZ_OFFSET:
     case PT_CONV_TZ:
       if (c != 1)

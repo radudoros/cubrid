@@ -20139,11 +20139,6 @@ db_string_reverse (const DB_VALUE * src_str, DB_VALUE * result_str)
 int
 db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
   int error_status = NO_ERROR;
-  DB_TYPE str_type;
-  bool res = true;
-  int len = db_get_string_size(src_str);
-  int i;
-  unsigned char* str = (unsigned char *)db_get_string(src_str);
 
   /*
   *  Assert that DB_VALUE structures have been allocated.
@@ -20156,7 +20151,7 @@ db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
   *    Verify that the parameters are both character strings.
   */
 
-  str_type = DB_VALUE_DOMAIN_TYPE(src_str);
+  DB_TYPE str_type = DB_VALUE_DOMAIN_TYPE(src_str);
   if (DB_IS_NULL(src_str))
   {
     db_make_null(result_str);
@@ -20171,82 +20166,67 @@ db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str) {
   */
   else
   {
-    //correct case:
+    bool res = true;
+    if (QSTR_IS_ANY_CHAR(str_type)) {
+      unsigned char* str = (unsigned char *)db_get_string(src_str);
+      int len = db_get_string_size(src_str);
+      len = db_get_string_size(src_str);
 
-    //res = (char *)db_private_alloc(NULL, db_get_string_size(src_str) + 1);
-    if (res == NULL)
-    {
-      error_status = ER_OUT_OF_VIRTUAL_MEMORY;
+      for (int i = 0; i < len / 2 - 1; ++i) {
+        if (str[i] != str[len - i - 1]) {
+          res = false;
+          break;
+        }
+      }
     }
 
-    if (error_status == NO_ERROR)
-    {
-      bool result;
-      if (QSTR_IS_ANY_CHAR(str_type)) {
-        result = true;
-        len = db_get_string_size(src_str);
-        for (i = 0; i < len / 2; ++i) {
-          if (str[i] != str[len - i - 1]) {
-            result = false;
+    if (str_type == DB_TYPE_MULTISET) {
+      int card = db_seq_cardinality(src_str->data.set);
+
+      if (card == 1 || card == 0) {
+        res = true;
+      }
+      else {
+        /* Compare each elem in multiset with first one (they have to be equal given the sets' ordering property)*/
+        DB_VALUE first;
+        db_seq_get(src_str->data.set, 0, &first);
+        DB_TYPE first_type = DB_VALUE_DOMAIN_TYPE(&first);
+        first.need_clear = true;
+
+        if (!QSTR_IS_ANY_CHAR(first_type)) {
+          error_status = ER_QSTR_INVALID_DATA_TYPE;
+        }
+        unsigned char* first_str = (unsigned char *)db_get_string(&first);
+        int len_first = db_get_string_size(&first);
+
+        for (int i = 1; i < card; ++i) {
+
+          DB_VALUE crt;
+          db_seq_get(src_str->data.set, i, &crt);
+          crt.need_clear = true;
+          DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE(&crt);
+
+          if (!QSTR_IS_ANY_CHAR(crt_type)) {
+            error_status = ER_QSTR_INVALID_DATA_TYPE;
+          }
+
+          unsigned char* crt_str = (unsigned char *)db_get_string(&crt);
+          int len_crt = db_get_string_size(&crt);
+          if (strcmp((const char*)first_str, (const char*)crt_str) != 0) {
+            res = false;
+            db_value_clear(&crt);
             break;
           }
 
+          db_value_clear(&crt);
         }
+
+        db_value_clear(&first);
       }
-      
-      if (str_type == DB_TYPE_MULTISET) {
-        DB_DATA data = src_str->data;
-        DB_COLLECTION * sett = (data.set);
-        len = db_seq_size(sett);
-        int card = db_seq_cardinality(sett);
-        result = true;
-
-        if (card == 1 || card == 0) {
-          result = true;
-        }
-        else {
-          DB_VALUE  last;
-          db_seq_get(sett, 0, &last);
-          DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE(&last);
-          last.need_clear = true;
-          for (int i = 1; i < card; ++i) {
-            DB_VALUE crt;
-            
-            db_seq_get(sett, i, &crt);
-            crt.need_clear = true;
-            DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE(&crt);
-
-            if (!QSTR_IS_ANY_CHAR(crt_type)) {
-
-              error_status = ER_QSTR_INVALID_DATA_TYPE;
-            }
-
-            unsigned char* last_str = (unsigned char *)db_get_string(&last);
-            int len_last = db_get_string_size(&last);
-            unsigned char* crt_str = (unsigned char *)db_get_string(&crt);
-            int len_crt = db_get_string_size(&crt);
-            if (len_crt != len_last) {
-              result = false;
-              db_value_clear(&crt);
-              break;
-            }
-            for (int j = 0; j < len_crt;++j) {
-              if (last_str[j] != crt_str[j]) {
-                result = false;
-                db_value_clear(&crt);
-                break;
-              }
-            }
-            db_value_clear(&crt);
-          }
-          db_value_clear(&last);
-        } 
-      }
-
-      db_make_int(result_str, result);
     }
+    db_make_int(result_str, res);
   }
-
+      
   return error_status;
 }
 

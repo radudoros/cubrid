@@ -2641,9 +2641,6 @@ fetch_peek_arith (THREAD_ENTRY * thread_p, REGU_VARIABLE * regu_var, VAL_DESCR *
       }
       else
       {
-        if (DB_VALUE_DOMAIN_TYPE(peek_right) == DB_TYPE_MULTISET ) {
-          //ok
-        }
         if (db_string_palindrome(peek_right, arithptr->value) != NO_ERROR)
         {
           goto error;

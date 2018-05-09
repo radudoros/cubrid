@@ -3683,7 +3683,7 @@ pt_is_pseudo_const (PT_NODE * expr)
 	case PT_HEX:
 	case PT_ASCII:
 	case PT_REVERSE:
-  case PT_PALINDROME:
+        case PT_PALINDROME:
 	case PT_DISK_SIZE:
 	case PT_SPACE:
 	case PT_MD5:
