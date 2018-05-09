@@ -2636,7 +2636,7 @@ fetch_peek_arith (THREAD_ENTRY * thread_p, REGU_VARIABLE * regu_var, VAL_DESCR *
 
     case T_PALINDROME:
       if (DB_IS_NULL(peek_right))
-      {
+       {
         PRIM_SET_NULL(arithptr->value);
       }
       else

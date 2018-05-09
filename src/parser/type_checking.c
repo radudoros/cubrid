@@ -15561,17 +15561,17 @@ pt_evaluate_db_value_expr (PARSER_CONTEXT * parser, PT_NODE * expr, PT_OP_TYPE o
 
     case PT_PALINDROME:
       if (DB_IS_NULL (arg1))
-      {
-        db_make_null(result);
-      }
+	{
+	  db_make_null (result);
+	}
       else
-      {
-        if (db_string_palindrome(arg1, result) != NO_ERROR)
-        {
-          PT_ERRORc(parser, o1, er_msg());
-          return 0;
-        }
-      }
+	{
+	  if (db_string_palindrome (arg1, result) != NO_ERROR)
+	    {
+	      PT_ERRORc (parser, o1, er_msg ());
+	      return 0;
+	    }
+	}
       break;
     case PT_DISK_SIZE:
       if (DB_IS_NULL (arg1))

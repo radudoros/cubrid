@@ -7080,7 +7080,7 @@ pt_to_regu_variable (PARSER_CONTEXT * parser, PT_NODE * node, UNBOX unbox)
 		       || node->info.expr.op == PT_SPACE || node->info.expr.op == PT_PRIOR
 		       || node->info.expr.op == PT_CONNECT_BY_ROOT || node->info.expr.op == PT_QPRIOR
 		       || node->info.expr.op == PT_BIT_NOT || node->info.expr.op == PT_REVERSE
-					 || node->info.expr.op == PT_PALINDROME
+		       || node->info.expr.op == PT_PALINDROME
 		       || node->info.expr.op == PT_BIT_COUNT || node->info.expr.op == PT_ISNULL
 		       || node->info.expr.op == PT_TYPEOF || node->info.expr.op == PT_YEARF
 		       || node->info.expr.op == PT_MONTHF || node->info.expr.op == PT_DAYF
