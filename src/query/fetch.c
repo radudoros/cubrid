@@ -2635,17 +2635,17 @@ fetch_peek_arith (THREAD_ENTRY * thread_p, REGU_VARIABLE * regu_var, VAL_DESCR *
       break;
 
     case T_PALINDROME:
-      if (DB_IS_NULL(peek_right))
-       {
-        PRIM_SET_NULL(arithptr->value);
-      }
+      if (DB_IS_NULL (peek_right))
+	{
+	  PRIM_SET_NULL (arithptr->value);
+	}
       else
-      {
-        if (db_string_palindrome(peek_right, arithptr->value) != NO_ERROR)
-        {
-          goto error;
-        }
-      }
+	{
+	  if (db_string_palindrome (peek_right, arithptr->value) != NO_ERROR)
+	    {
+	      goto error;
+	    }
+	}
       break;
 
     case T_JSON_CONTAINS:
