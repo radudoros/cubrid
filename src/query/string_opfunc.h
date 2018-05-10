@@ -285,7 +285,7 @@ extern int db_to_datetime (const DB_VALUE * src_str, const DB_VALUE * format_str
 extern int db_to_number (const DB_VALUE * src_str, const DB_VALUE * format_str, const DB_VALUE * number_lang,
 			 DB_VALUE * result_num);
 extern int db_string_reverse (const DB_VALUE * src_str, DB_VALUE * result_str);
-extern int db_string_palindrome(const DB_VALUE * src_str, DB_VALUE * result_str);
+extern int db_palindrome (const DB_VALUE * src_str, DB_VALUE * result_str);
 extern int db_format (const DB_VALUE * number_text, const DB_VALUE * decimals, const DB_VALUE * number_lang,
 		      DB_VALUE * result, const TP_DOMAIN * domain);
 /* datetime functions */

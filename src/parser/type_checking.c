@@ -15566,7 +15566,7 @@ pt_evaluate_db_value_expr (PARSER_CONTEXT * parser, PT_NODE * expr, PT_OP_TYPE o
 	}
       else
 	{
-	  if (db_string_palindrome (arg1, result) != NO_ERROR)
+	  if (db_palindrome (arg1, result) != NO_ERROR)
 	    {
 	      PT_ERRORc (parser, o1, er_msg ());
 	      return 0;

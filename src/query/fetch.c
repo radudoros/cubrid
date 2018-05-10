@@ -2641,7 +2641,7 @@ fetch_peek_arith (THREAD_ENTRY * thread_p, REGU_VARIABLE * regu_var, VAL_DESCR *
 	}
       else
 	{
-	  if (db_string_palindrome (peek_right, arithptr->value) != NO_ERROR)
+	  if (db_palindrome (peek_right, arithptr->value) != NO_ERROR)
 	    {
 	      goto error;
 	    }
