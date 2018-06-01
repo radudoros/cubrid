@@ -3189,6 +3189,7 @@ get_opcode_rank (PT_OP_TYPE opcode)
     case PT_MID:
     case PT_STRCMP:
     case PT_REVERSE:
+    case PT_PALINDROME:
     case PT_DISK_SIZE:
 
     case PT_BIT_COUNT:
@@ -3682,6 +3683,7 @@ pt_is_pseudo_const (PT_NODE * expr)
 	case PT_HEX:
 	case PT_ASCII:
 	case PT_REVERSE:
+	case PT_PALINDROME:
 	case PT_DISK_SIZE:
 	case PT_SPACE:
 	case PT_MD5:

@@ -7095,7 +7095,8 @@ pt_to_regu_variable (PARSER_CONTEXT * parser, PT_NODE * node, UNBOX unbox)
 		       || node->info.expr.op == PT_TO_BASE64 || node->info.expr.op == PT_FROM_BASE64
 		       || node->info.expr.op == PT_FROM_BASE64 || node->info.expr.op == PT_SLEEP
 		       || node->info.expr.op == PT_TZ_OFFSET || node->info.expr.op == PT_CRC32
-		       || node->info.expr.op == PT_DISK_SIZE || node->info.expr.op == PT_CONV_TZ)
+		       || node->info.expr.op == PT_DISK_SIZE || node->info.expr.op == PT_CONV_TZ
+		       || node->info.expr.op == PT_PALINDROME)
 		{
 		  r1 = NULL;
 
@@ -7519,6 +7520,10 @@ pt_to_regu_variable (PARSER_CONTEXT * parser, PT_NODE * node, UNBOX unbox)
 
 		case PT_REVERSE:
 		  regu = pt_make_regu_arith (r1, r2, NULL, T_REVERSE, domain);
+		  break;
+
+		case PT_PALINDROME:
+		  regu = pt_make_regu_arith (r1, r2, NULL, T_PALINDROME, domain);
 		  break;
 
 		case PT_DISK_SIZE:
@@ -23568,6 +23573,7 @@ validate_regu_key_function_index (REGU_VARIABLE * regu_var)
 	case T_TZ_OFFSET:
 	case T_CRC32:
 	case T_CONV_TZ:
+	case T_PALINDROME:
 	  break;
 	default:
 	  return true;

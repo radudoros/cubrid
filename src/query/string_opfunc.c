@@ -20136,6 +20136,112 @@ db_string_reverse (const DB_VALUE * src_str, DB_VALUE * result_str)
   return error_status;
 }
 
+int
+db_palindrome (const DB_VALUE * eval_value, DB_VALUE * result_value)
+{
+  int error_status = NO_ERROR;
+
+  /*
+   *  Assert that DB_VALUE structures have been allocated.
+   */
+  assert (eval_value != NULL);
+  assert (result_value != NULL);
+
+  /*
+   *  Categorize the two input parameters and check for errors.
+   *    Verify that the parameters are both character strings.
+   */
+
+  DB_TYPE db_type = DB_VALUE_DOMAIN_TYPE (eval_value);
+  if (DB_IS_NULL (eval_value))
+    {
+      db_make_null (result_value);
+    }
+  else if (!QSTR_IS_ANY_CHAR (db_type) && db_type != DB_TYPE_MULTISET)
+    {
+      er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_QSTR_INVALID_DATA_TYPE, 0);
+      return ER_QSTR_INVALID_DATA_TYPE;
+    }
+  /*
+   *  If the input parameters have been properly validated, then
+   *  we are ready to operate.
+   */
+  else
+    {
+      bool res = true;
+      if (QSTR_IS_ANY_CHAR (db_type))
+	{
+	  char *str = db_get_string (eval_value);
+	  int len = db_get_string_size (eval_value);
+
+	  for (int i = 0; i < len / 2; ++i)
+	    {
+	      if (str[i] != str[len - i - 1])
+		{
+		  res = false;
+		  break;
+		}
+	    }
+	}
+
+      if (db_type == DB_TYPE_MULTISET)
+	{
+	  int card = db_seq_cardinality (eval_value->data.set);
+
+	  if (card == 1 || card == 0)
+	    {
+	      res = true;
+	    }
+	  else
+	    {
+	      /* Compare each elem in multiset with first one (they have to be equal given the sets' ordering property) */
+	      DB_VALUE first;
+	      db_seq_get (eval_value->data.set, 0, &first);
+	      DB_TYPE first_type = DB_VALUE_DOMAIN_TYPE (&first);
+	      first.need_clear = true;
+
+	      if (!QSTR_IS_ANY_CHAR (first_type))
+		{
+		  er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_QSTR_INVALID_DATA_TYPE, 0);
+		  error_status = ER_QSTR_INVALID_DATA_TYPE;
+		}
+	      char *first_str = db_get_string (&first);
+	      int len_first = db_get_string_size (&first);
+
+	      for (int i = 1; i < card; ++i)
+		{
+		  DB_VALUE crt;
+		  db_seq_get (eval_value->data.set, i, &crt);
+		  crt.need_clear = true;
+		  DB_TYPE crt_type = DB_VALUE_DOMAIN_TYPE (&crt);
+
+		  if (!QSTR_IS_ANY_CHAR (crt_type))
+		    {
+		      er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_QSTR_INVALID_DATA_TYPE, 0);
+		      error_status = ER_QSTR_INVALID_DATA_TYPE;
+		    }
+
+		  char *crt_str = db_get_string (&crt);
+		  int len_crt = db_get_string_size (&crt);
+		  if (strcmp (first_str, crt_str) != 0)
+		    {
+		      res = false;
+		      db_value_clear (&crt);
+		      break;
+		    }
+
+		  db_value_clear (&crt);
+		}
+
+	      db_value_clear (&first);
+	    }
+	}
+      db_make_int (result_value, res);
+    }
+
+  return error_status;
+}
+
 /*
  * add_and_normalize_date_time ()
  *

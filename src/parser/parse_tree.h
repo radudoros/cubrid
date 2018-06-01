@@ -1539,6 +1539,7 @@ typedef enum
   PT_JSON_LENGTH,
   PT_JSON_DEPTH,
   PT_JSON_SEARCH,
+  PT_PALINDROME,
 
   /* This is the last entry. Please add a new one before it. */
   PT_LAST_OPCODE

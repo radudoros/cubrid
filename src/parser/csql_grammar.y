@@ -233,6 +233,7 @@ static FUNCTION_MAP functions[] = {
   {"nvl", PT_NVL},
   {"nvl2", PT_NVL2},
   {"orderby_num", PT_ORDERBY_NUM},
+  {"palindrome", PT_PALINDROME},
   {"percent_rank", PT_PERCENT_RANK},
   {"power", PT_POWER},
   {"pow", PT_POWER},
@@ -1620,6 +1621,8 @@ int g_original_buffer_len;
 %token <cptr> WITHIN
 %token <cptr> WORKSPACE
 %token <cptr> TIMEZONES
+
+%token <cptr> PALINDROME
 
 
 %token <cptr> IdName
@@ -21252,6 +21255,15 @@ identifier
 			PARSER_SAVE_ERR_CONTEXT ($$, @$.buffer_pos)
 
 		DBG_PRINT}}
+	| PALINDROME
+		{{
+			PT_NODE *p = parser_new_node (this_parser, PT_NAME);
+			if (p)
+			  p->info.name.original = $1;
+			$$ = p;
+			PARSER_SAVE_ERR_CONTEXT ($$, @$.buffer_pos)
+
+		DBG_PRINT}}
 	| DISK_SIZE
 		{{
 
@@ -25572,6 +25584,7 @@ parser_keyword_func (const char *name, PT_NODE * args)
       return node;
 
     case PT_REVERSE:
+    case PT_PALINDROME:
     case PT_TZ_OFFSET:
     case PT_CONV_TZ:
       if (c != 1)
