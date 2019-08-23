@@ -26,7 +26,7 @@
 
 #include "cubstream.hpp"
 #include "server_support.h"
-#include "ha_operations.hpp"
+#include "ha_server_state.hpp"
 
 namespace cubstream
 {

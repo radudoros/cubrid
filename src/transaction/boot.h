@@ -27,7 +27,7 @@
 #include "client_credentials.hpp"
 #include "es_common.h"
 #include "ha_server_state.hpp"
-#include "ha_operations.hpp"
+#include "ha_server_state.hpp"
 #include "porting.h"
 #include "storage_common.h"
 
@@ -119,7 +119,9 @@ struct boot_server_credential
   PGLENGTH page_size;
   PGLENGTH log_page_size;
   float disk_compatibility;
-    ha_operations::SERVER_STATE ha_server_state;	/* HA_SERVER_STATE */
+  /* *INDENT-OFF* */
+  ha_operations::SERVER_STATE ha_server_state;	/* HA_SERVER_STATE */
+  /* *INDENT-ON* */
   char server_session_key[SERVER_SESSION_KEY_SIZE];
   int db_charset;
   char *db_lang;

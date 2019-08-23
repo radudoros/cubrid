@@ -69,7 +69,7 @@
 #if defined (SA_MODE)
 #include "thread_manager.hpp"
 #endif // SA_MODE
-#include "ha_operations.hpp"	// TODO: remove dependency
+#include "ha_server_state.hpp"
 #include "lob_locator.hpp"
 #include "xasl.h"
 

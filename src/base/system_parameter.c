@@ -84,7 +84,7 @@
 #include "tz_support.h"
 #include "perf_monitor.h"
 #include "fault_injection.h"
-#include "ha_operations.hpp"
+#include "ha_server_state.hpp"
 #include "replication_common.hpp"
 #if defined (SERVER_MODE)
 #include "thread_manager.hpp"	// for thread_get_thread_entry_info
@@ -5944,6 +5944,7 @@ static KEYVAL ha_mode_words[] = {
   {"2", HA_MODE_REPLICA}
 };
 
+/* *INDENT-OFF* */
 static KEYVAL ha_server_state_words[] = {
   {ha_operations::server_state_string (ha_operations::SERVER_STATE_IDLE), ha_operations::SERVER_STATE_IDLE},
   {ha_operations::server_state_string (ha_operations::SERVER_STATE_ACTIVE), ha_operations::SERVER_STATE_ACTIVE},
@@ -5956,6 +5957,7 @@ static KEYVAL ha_server_state_words[] = {
    ha_operations::SERVER_STATE_MAINTENANCE},
   {ha_operations::server_state_string (ha_operations::SERVER_STATE_DEAD), ha_operations::SERVER_STATE_DEAD}
 };
+/* *INDENT-ON* */
 
 static KEYVAL ha_log_applier_state_words[] = {
   {HA_LOG_APPLIER_STATE_UNREGISTERED_STR, HA_LOG_APPLIER_STATE_UNREGISTERED},

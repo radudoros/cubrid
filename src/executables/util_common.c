@@ -40,7 +40,7 @@
 #include "mprec.h"
 #include "system_parameter.h"
 #include "environment_variable.h"
-#include "ha_operations.hpp"
+#include "ha_server_state.hpp"
 #include "heartbeat.h"
 #include "hostname.hpp"
 #if defined (WINDOWS)
