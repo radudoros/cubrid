@@ -84,7 +84,6 @@
 #include "ha_operations.hpp"
 #include "transaction_transient.hpp"
 
-
 #if defined (SUPPRESS_STRLEN_WARNING)
 #define strlen(s1)  ((int) strlen(s1))
 #endif /* defined (SUPPRESS_STRLEN_WARNING) */

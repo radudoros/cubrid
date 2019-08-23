@@ -60,42 +60,33 @@
 
 #define LOGWR_COPY_LOG_BUFFER_NPAGES      LOGPB_BUFFER_NPAGES_LOWER
 
+/* *INDENT-OFF* */
 static int prev_ha_server_state = ha_operations::SERVER_STATE_NA;
-static bool
-  logwr_need_shutdown = false;
+/* *INDENT-ON* */
+static bool logwr_need_shutdown = false;
 
-typedef struct log_bgarv_header
-  LOG_BGARV_HEADER;
+typedef struct log_bgarv_header LOG_BGARV_HEADER;
 struct log_bgarv_header
 {				/* Background log archive header information */
-  char
-    magic[CUBRID_MAGIC_MAX_LENGTH];
+  char magic[CUBRID_MAGIC_MAX_LENGTH];
 
-  INT32
-    dummy;
-  INT64
-    db_creation;
+  INT32 dummy;
+  INT64 db_creation;
 
-  LOG_PAGEID
-    start_page_id;
-  LOG_PAGEID
-    current_page_id;
-  LOG_PAGEID
-    last_sync_pageid;
+  LOG_PAGEID start_page_id;
+  LOG_PAGEID current_page_id;
+  LOG_PAGEID last_sync_pageid;
 };
 
 #define logwr_er_log(...) if (prm_get_bool_value (PRM_ID_DEBUG_LOGWR)) _er_log_debug (ARG_FILE_LINE, __VA_ARGS__)
 
-static int
-logwr_check_page_checksum (THREAD_ENTRY * thread_p, LOG_PAGE * log_pgptr);
+static int logwr_check_page_checksum (THREAD_ENTRY * thread_p, LOG_PAGE * log_pgptr);
 
 #if defined(CS_MODE)
-static
-  log_header
+static log_header
 init_cs_logwr_header ()
 {
-  log_header
-    hdr;
+  log_header hdr;
   hdr.next_trid = NULL_TRANID;
   hdr.nxarv_pageid = NULL_PAGEID;
   hdr.nxarv_phy_pageid = NULL_PAGEID;
@@ -166,26 +157,16 @@ LOGWR_GLOBAL logwr_Gl = {
 };
 // *INDENT-ON*
 
-static int
-logwr_fetch_header_page (LOG_PAGE * log_pgptr, int vol_fd);
-static int
-logwr_read_log_header (void);
-static int
-logwr_read_bgarv_log_header (void);
-static int
-logwr_initialize (const char *db_name, const char *log_path, int mode, LOG_PAGEID start_pageid);
-static void
-logwr_finalize (void);
-static LOG_PAGE **
-logwr_writev_append_pages (LOG_PAGE ** to_flush, DKNPAGES npages);
-static int
-logwr_flush_all_append_pages (void);
-static int
-logwr_archive_active_log (void);
-static int
-logwr_flush_bgarv_header_page (void);
-static void
-logwr_reinit_copylog (void);
+static int logwr_fetch_header_page (LOG_PAGE * log_pgptr, int vol_fd);
+static int logwr_read_log_header (void);
+static int logwr_read_bgarv_log_header (void);
+static int logwr_initialize (const char *db_name, const char *log_path, int mode, LOG_PAGEID start_pageid);
+static void logwr_finalize (void);
+static LOG_PAGE **logwr_writev_append_pages (LOG_PAGE ** to_flush, DKNPAGES npages);
+static int logwr_flush_all_append_pages (void);
+static int logwr_archive_active_log (void);
+static int logwr_flush_bgarv_header_page (void);
+static void logwr_reinit_copylog (void);
 
 /*
  * logwr_to_physical_pageid -
@@ -197,8 +178,7 @@ logwr_reinit_copylog (void);
 LOG_PHY_PAGEID
 logwr_to_physical_pageid (LOG_PAGEID logical_pageid)
 {
-  LOG_PHY_PAGEID
-    phy_pageid;
+  LOG_PHY_PAGEID phy_pageid;
 
   if (logical_pageid == LOGPB_HEADER_PAGE_ID)
     {
@@ -206,8 +186,7 @@ logwr_to_physical_pageid (LOG_PAGEID logical_pageid)
     }
   else
     {
-      LOG_PAGEID
-	tmp_pageid;
+      LOG_PAGEID tmp_pageid;
 
       tmp_pageid = logical_pageid - logwr_Gl.hdr.fpageid;
 
@@ -243,10 +222,8 @@ logwr_to_physical_pageid (LOG_PAGEID logical_pageid)
 static int
 logwr_fetch_header_page (LOG_PAGE * log_pgptr, int vol_fd)
 {
-  LOG_PAGEID
-    pageid;
-  LOG_PHY_PAGEID
-    phy_pageid;
+  LOG_PAGEID pageid;
+  LOG_PHY_PAGEID phy_pageid;
 
   assert (log_pgptr != NULL);
 
@@ -283,14 +260,10 @@ logwr_fetch_header_page (LOG_PAGE * log_pgptr, int vol_fd)
 static int
 logwr_read_log_header (void)
 {
-  char
-    log_pgbuf[IO_MAX_PAGE_SIZE + MAX_ALIGNMENT];
-  char *
-    aligned_log_pgbuf;
-  LOG_PAGE *
-    log_pgptr;
-  int
-    error = NO_ERROR;
+  char log_pgbuf[IO_MAX_PAGE_SIZE + MAX_ALIGNMENT];
+  char *aligned_log_pgbuf;
+  LOG_PAGE *log_pgptr;
+  int error = NO_ERROR;
 
   aligned_log_pgbuf = PTR_ALIGN (log_pgbuf, MAX_ALIGNMENT);
   log_pgptr = (LOG_PAGE *) aligned_log_pgbuf;
@@ -338,18 +311,12 @@ logwr_read_log_header (void)
 static int
 logwr_read_bgarv_log_header (void)
 {
-  char
-    log_pgbuf[IO_MAX_PAGE_SIZE + MAX_ALIGNMENT];
-  char *
-    aligned_log_pgbuf;
-  LOG_PAGE *
-    log_pgptr;
-  LOG_BGARV_HEADER *
-    bgarv_header;
-  BACKGROUND_ARCHIVING_INFO *
-    bg_arv_info;
-  int
-    error = NO_ERROR;
+  char log_pgbuf[IO_MAX_PAGE_SIZE + MAX_ALIGNMENT];
+  char *aligned_log_pgbuf;
+  LOG_PAGE *log_pgptr;
+  LOG_BGARV_HEADER *bgarv_header;
+  BACKGROUND_ARCHIVING_INFO *bg_arv_info;
+  int error = NO_ERROR;
 
   bg_arv_info = &logwr_Gl.bg_archive_info;
 
@@ -419,12 +386,9 @@ logwr_force_shutdown (void)
 static int
 logwr_initialize (const char *db_name, const char *log_path, int mode, LOG_PAGEID start_pageid)
 {
-  int
-    log_nbuffers;
-  int
-    error;
-  char *
-    at_char = NULL;
+  int log_nbuffers;
+  int error;
+  char *at_char = NULL;
 
   /* signal processing */
 #if defined(WINDOWS)
@@ -470,8 +434,7 @@ logwr_initialize (const char *db_name, const char *log_path, int mode, LOG_PAGEI
 
   if (logwr_Gl.toflush == NULL)
     {
-      int
-	i;
+      int i;
 
       logwr_Gl.max_toflush = log_nbuffers - 1;
       logwr_Gl.toflush = (LOG_PAGE **) calloc (logwr_Gl.max_toflush, sizeof (logwr_Gl.toflush));
@@ -514,8 +477,7 @@ logwr_initialize (const char *db_name, const char *log_path, int mode, LOG_PAGEI
 
   if (prm_get_bool_value (PRM_ID_LOG_BACKGROUND_ARCHIVING))
     {
-      BACKGROUND_ARCHIVING_INFO *
-	bg_arv_info;
+      BACKGROUND_ARCHIVING_INFO *bg_arv_info;
       bg_arv_info = &logwr_Gl.bg_archive_info;
 
       if (fileio_is_volume_exist (logwr_Gl.bg_archive_name) == true)
@@ -635,12 +597,9 @@ logwr_finalize (void)
 int
 logwr_set_hdr_and_flush_info (void)
 {
-  LOG_PAGE *
-    log_pgptr = NULL, *last_pgptr;
-  char *
-    p;
-  int
-    num_toflush = 0;
+  LOG_PAGE *log_pgptr = NULL, *last_pgptr;
+  char *p;
+  int num_toflush = 0;
 
   /* Set the flush information */
   p = logwr_Gl.logpg_area + LOG_PAGESIZE;
@@ -711,8 +670,7 @@ logwr_set_hdr_and_flush_info (void)
   else
     {
       /* If it gets only the header page, compares both of the headers. There is no update for the header information */
-      LOG_HEADER
-	hdr;
+      LOG_HEADER hdr;
       log_pgptr = (LOG_PAGE *) logwr_Gl.logpg_area;
       hdr = *((LOG_HEADER *) log_pgptr->area);
 
@@ -773,22 +731,14 @@ logwr_set_hdr_and_flush_info (void)
 static int
 logwr_copy_necessary_log (LOG_PAGEID to_pageid)
 {
-  char
-    log_pgbuf[IO_MAX_PAGE_SIZE * LOGPB_IO_NPAGES + MAX_ALIGNMENT];
-  char *
-    aligned_log_pgbuf = NULL;
-  LOG_PAGEID
-    pageid = NULL_PAGEID;
-  LOG_PHY_PAGEID
-    phy_pageid = NULL_PAGEID;
-  LOG_PHY_PAGEID
-    ar_phy_pageid = NULL_PAGEID;
-  LOG_PAGE *
-    log_pgptr = NULL;
-  int
-    num_pages = 0;
-  BACKGROUND_ARCHIVING_INFO *
-    bg_arv_info = NULL;
+  char log_pgbuf[IO_MAX_PAGE_SIZE * LOGPB_IO_NPAGES + MAX_ALIGNMENT];
+  char *aligned_log_pgbuf = NULL;
+  LOG_PAGEID pageid = NULL_PAGEID;
+  LOG_PHY_PAGEID phy_pageid = NULL_PAGEID;
+  LOG_PHY_PAGEID ar_phy_pageid = NULL_PAGEID;
+  LOG_PAGE *log_pgptr = NULL;
+  int num_pages = 0;
+  BACKGROUND_ARCHIVING_INFO *bg_arv_info = NULL;
 
   bg_arv_info = &logwr_Gl.bg_archive_info;
   aligned_log_pgbuf = PTR_ALIGN (log_pgbuf, MAX_ALIGNMENT);
@@ -850,14 +800,10 @@ logwr_copy_necessary_log (LOG_PAGEID to_pageid)
 static LOG_PAGE **
 logwr_writev_append_pages (LOG_PAGE ** to_flush, DKNPAGES npages)
 {
-  LOG_PAGEID
-    fpageid;
-  LOG_PHY_PAGEID
-    phy_pageid;
-  BACKGROUND_ARCHIVING_INFO *
-    bg_arv_info = NULL;
-  int
-    error = NO_ERROR;
+  LOG_PAGEID fpageid;
+  LOG_PHY_PAGEID phy_pageid;
+  BACKGROUND_ARCHIVING_INFO *bg_arv_info = NULL;
+  int error = NO_ERROR;
 
   if (npages > 0)
     {
@@ -946,20 +892,12 @@ logwr_writev_append_pages (LOG_PAGE ** to_flush, DKNPAGES npages)
 static int
 logwr_flush_all_append_pages (void)
 {
-  LOG_PAGE *
-  pgptr, *
-    prv_pgptr;
-  LOG_PAGEID
-    pageid,
-    prv_pageid;
-  int
-    idxflush;
-  bool
-    need_sync;
-  int
-    flush_page_count;
-  int
-    i;
+  LOG_PAGE *pgptr, *prv_pgptr;
+  LOG_PAGEID pageid, prv_pageid;
+  int idxflush;
+  bool need_sync;
+  int flush_page_count;
+  int i;
 
   idxflush = -1;
   prv_pgptr = NULL;
@@ -1026,8 +964,7 @@ logwr_flush_all_append_pages (void)
 
   if (idxflush != -1)
     {
-      int
-	page_toflush = logwr_Gl.num_toflush - idxflush;
+      int page_toflush = logwr_Gl.num_toflush - idxflush;
 
       /* last countious pages */
       if (logwr_writev_append_pages (&logwr_Gl.toflush[idxflush], page_toflush) == NULL)
@@ -1086,22 +1023,14 @@ logwr_flush_all_append_pages (void)
 int
 logwr_flush_bgarv_header_page (void)
 {
-  char
-    log_pgbuf[IO_MAX_PAGE_SIZE + MAX_ALIGNMENT];
-  char *
-    aligned_log_pgbuf;
-  LOG_PAGE *
-    log_pgptr;
-  BACKGROUND_ARCHIVING_INFO *
-    bg_arv_info = NULL;
-  LOG_BGARV_HEADER *
-    bgarvhdr = NULL;
-  LOG_PAGEID
-    logical_pageid;
-  LOG_PHY_PAGEID
-    phy_pageid;
-  int
-    error_code = NO_ERROR;
+  char log_pgbuf[IO_MAX_PAGE_SIZE + MAX_ALIGNMENT];
+  char *aligned_log_pgbuf;
+  LOG_PAGE *log_pgptr;
+  BACKGROUND_ARCHIVING_INFO *bg_arv_info = NULL;
+  LOG_BGARV_HEADER *bgarvhdr = NULL;
+  LOG_PAGEID logical_pageid;
+  LOG_PHY_PAGEID phy_pageid;
+  int error_code = NO_ERROR;
 
   bg_arv_info = &logwr_Gl.bg_archive_info;
 
@@ -1156,12 +1085,9 @@ logwr_flush_bgarv_header_page (void)
 void
 logwr_flush_header_page (void)
 {
-  LOG_PAGEID
-    logical_pageid;
-  LOG_PHY_PAGEID
-    phy_pageid;
-  int
-    nbytes;
+  LOG_PAGEID logical_pageid;
+  LOG_PHY_PAGEID phy_pageid;
+  int nbytes;
 
   if (logwr_Gl.loghdr_pgptr == NULL)
     {
@@ -1204,8 +1130,7 @@ logwr_flush_header_page (void)
 
   if (prev_ha_server_state != logwr_Gl.hdr.ha_server_state)
     {
-      string_buffer
-	error_msg;
+      string_buffer error_msg;
       error_msg ("change the state of HA server (%s@%s) from '%s' to '%s'", logwr_Gl.db_name,
 		 (logwr_Gl.hostname != NULL) ? logwr_Gl.hostname : "unknown",
 		 ha_operations::server_state_string ((ha_operations::SERVER_STATE) prev_ha_server_state),
@@ -1228,36 +1153,21 @@ logwr_flush_header_page (void)
 static int
 logwr_archive_active_log (void)
 {
-  char
-  archive_name[PATH_MAX] = { '\0' };
-  LOG_ARV_HEADER *
-    arvhdr;
-  char
-    log_pgbuf[IO_MAX_PAGE_SIZE * LOGPB_IO_NPAGES + MAX_ALIGNMENT];
-  char *
-    aligned_log_pgbuf;
-  LOG_PAGE *
-    log_pgptr = NULL;
-  LOG_PAGE *
-    malloc_arv_hdr_pgptr = NULL;
-  LOG_PAGEID
-    pageid;
-  LOG_LSA
-    saved_append_lsa;
-  LOG_PHY_PAGEID
-    ar_phy_pageid = NULL_PAGEID, phy_pageid = NULL_PAGEID;
-  int
-    vdes = NULL_VOLDES;
-  int
-    error_code = NO_ERROR;
-  int
-    num_pages = 0;
-  const char *
-    catmsg;
-  char
-    buffer[LINE_MAX];
-  BACKGROUND_ARCHIVING_INFO *
-    bg_arv_info;
+  char archive_name[PATH_MAX] = { '\0' };
+  LOG_ARV_HEADER *arvhdr;
+  char log_pgbuf[IO_MAX_PAGE_SIZE * LOGPB_IO_NPAGES + MAX_ALIGNMENT];
+  char *aligned_log_pgbuf;
+  LOG_PAGE *log_pgptr = NULL;
+  LOG_PAGE *malloc_arv_hdr_pgptr = NULL;
+  LOG_PAGEID pageid;
+  LOG_LSA saved_append_lsa;
+  LOG_PHY_PAGEID ar_phy_pageid = NULL_PAGEID, phy_pageid = NULL_PAGEID;
+  int vdes = NULL_VOLDES;
+  int error_code = NO_ERROR;
+  int num_pages = 0;
+  const char *catmsg;
+  char buffer[LINE_MAX];
+  BACKGROUND_ARCHIVING_INFO *bg_arv_info;
 
   aligned_log_pgbuf = PTR_ALIGN (log_pgbuf, MAX_ALIGNMENT);
 
@@ -1479,12 +1389,9 @@ error:
 int
 logwr_write_log_pages (void)
 {
-  int
-    error;
-  struct timeval
-    curtime;
-  int
-    diff_msec;
+  int error;
+  struct timeval curtime;
+  int diff_msec;
 
   if (logwr_Gl.num_toflush <= 0)
     return NO_ERROR;
@@ -1557,25 +1464,18 @@ logwr_write_log_pages (void)
 int
 logwr_copy_log_header_check (const char *db_name, bool verbose, LOG_LSA * master_eof_lsa)
 {
-  int
-    error = NO_ERROR;
-  LOGWR_CONTEXT
-  ctx = { -1, 0, false };
+  int error = NO_ERROR;
+  LOGWR_CONTEXT ctx = {
+    -1, 0, false
+  };
   OR_ALIGNED_BUF (OR_INT_SIZE * 2 + OR_INT64_SIZE) a_request;
   OR_ALIGNED_BUF (OR_INT_SIZE * 2) a_reply;
-  char *
-  request, *
-    reply;
-  char *
-    ptr;
-  char *
-    logpg_area = NULL;
-  LOG_PAGE *
-    loghdr_pgptr;
-  LOG_HEADER
-    hdr;
-  char *
-    atchar;
+  char *request, *reply;
+  char *ptr;
+  char *logpg_area = NULL;
+  LOG_PAGE *loghdr_pgptr;
+  LOG_HEADER hdr;
+  char *atchar;
 
   atchar = (char *) strchr (db_name, '@');
   if (atchar)
@@ -1639,10 +1539,10 @@ logwr_copy_log_header_check (const char *db_name, bool verbose, LOG_LSA * master
 int
 logwr_copy_log_file (const char *db_name, const char *log_path, int mode, INT64 start_page_id)
 {
-  LOGWR_CONTEXT
-  ctx = { -1, 0, false };
-  int
-    error = NO_ERROR;
+  LOGWR_CONTEXT ctx = {
+    -1, 0, false
+  };
+  int error = NO_ERROR;
 
   if ((error = logwr_initialize (db_name, log_path, mode, start_page_id)) != NO_ERROR)
     {
@@ -1669,8 +1569,7 @@ logwr_copy_log_file (const char *db_name, const char *log_path, int mode, INT64 
 
 	  if (logwr_Gl.reinit_copylog)
 	    {
-	      char
-		error_str[LINE_MAX];
+	      char error_str[LINE_MAX];
 
 	      sprintf (error_str,
 		       "Replication logs and catalog have been reinitialized "
@@ -1740,18 +1639,12 @@ static void
 logwr_reinit_copylog (void)
 {
 #if !defined(WINDOWS)
-  DIR *
-    dirp;
-  struct dirent *
-    dp;
-  char
-    log_archive_path[2 * PATH_MAX];
-  char
-    archive_log_prefix[2 * PATH_MAX];
-  int
-    archive_log_prefix_len;
-  BACKGROUND_ARCHIVING_INFO *
-    bg_arv_info = NULL;
+  DIR *dirp;
+  struct dirent *dp;
+  char log_archive_path[2 * PATH_MAX];
+  char archive_log_prefix[2 * PATH_MAX];
+  int archive_log_prefix_len;
+  BACKGROUND_ARCHIVING_INFO *bg_arv_info = NULL;
 
   /* mark will be deleted */
   logwr_Gl.hdr.mark_will_del = true;
@@ -1841,24 +1734,15 @@ logwr_copy_log_file (const char *db_name, const char *log_path, int mode, INT64 
 static int
 logwr_check_page_checksum (THREAD_ENTRY * thread_p, LOG_PAGE * log_pgptr)
 {
-  int
-    error_code = NO_ERROR, saved_checksum_crc32;
-  const int
-    block_size = 4096;
-  const int
-    max_num_pages = IO_MAX_PAGE_SIZE / block_size;
-  const int
-    sample_nbytes = 16;
-  int
-    sampling_offset;
-  char
-    buf[max_num_pages * sample_nbytes * 2];
-  const int
-    num_pages = LOG_PAGESIZE / block_size;
-  const size_t
-    sizeof_buf = num_pages * sample_nbytes * 2;
-  int
-    checksum_crc32;
+  int error_code = NO_ERROR, saved_checksum_crc32;
+  const int block_size = 4096;
+  const int max_num_pages = IO_MAX_PAGE_SIZE / block_size;
+  const int sample_nbytes = 16;
+  int sampling_offset;
+  char buf[max_num_pages * sample_nbytes * 2];
+  const int num_pages = LOG_PAGESIZE / block_size;
+  const size_t sizeof_buf = num_pages * sample_nbytes * 2;
+  int checksum_crc32;
 
   assert (log_pgptr != NULL);
 
@@ -1872,8 +1756,7 @@ logwr_check_page_checksum (THREAD_ENTRY * thread_p, LOG_PAGE * log_pgptr)
   /* Resets checksum to not affect the new computation. */
   log_pgptr->hdr.checksum = 0;
 
-  char *
-    p = buf;
+  char *p = buf;
   for (int i = 0; i < num_pages; i++)
     {
       // first
@@ -1931,21 +1814,15 @@ logwr_log_ha_filestat_to_string (enum LOG_HA_FILESTAT val)
 static int
 logwr_register_writer_entry (LOGWR_ENTRY ** wr_entry_p, THREAD_ENTRY * thread_p, LOG_PAGEID fpageid,
 			     int mode, bool copy_from_first_phy_page);
-static bool
-logwr_unregister_writer_entry (LOGWR_ENTRY * wr_entry, int status);
+static bool logwr_unregister_writer_entry (LOGWR_ENTRY * wr_entry, int status);
 static int
 logwr_pack_log_pages (THREAD_ENTRY * thread_p, char *logpg_area, int *logpg_used_size, int *status,
 		      LOGWR_ENTRY * entry, bool copy_from_file);
-static void
-logwr_cs_exit (THREAD_ENTRY * thread_p, bool * check_cs_own);
-static void
-logwr_write_end (THREAD_ENTRY * thread_p, LOGWR_INFO * writer_info, LOGWR_ENTRY * entry, int status);
-static void
-logwr_set_eof_lsa (THREAD_ENTRY * thread_p, LOGWR_ENTRY * entry);
-static bool
-logwr_is_delayed (THREAD_ENTRY * thread_p, LOGWR_ENTRY * entry);
-static void
-logwr_update_last_sent_eof_lsa (LOGWR_ENTRY * entry);
+static void logwr_cs_exit (THREAD_ENTRY * thread_p, bool * check_cs_own);
+static void logwr_write_end (THREAD_ENTRY * thread_p, LOGWR_INFO * writer_info, LOGWR_ENTRY * entry, int status);
+static void logwr_set_eof_lsa (THREAD_ENTRY * thread_p, LOGWR_ENTRY * entry);
+static bool logwr_is_delayed (THREAD_ENTRY * thread_p, LOGWR_ENTRY * entry);
+static void logwr_update_last_sent_eof_lsa (LOGWR_ENTRY * entry);
 
 /*
  * logwr_register_writer_entry -
@@ -1963,12 +1840,9 @@ static int
 logwr_register_writer_entry (LOGWR_ENTRY ** wr_entry_p, THREAD_ENTRY * thread_p, LOG_PAGEID fpageid, int mode,
 			     bool copy_from_first_phy_page)
 {
-  LOGWR_ENTRY *
-    entry;
-  int
-    rv;
-  LOGWR_INFO *
-    writer_info = log_Gl.writer_info;
+  LOGWR_ENTRY *entry;
+  int rv;
+  LOGWR_INFO *writer_info = log_Gl.writer_info;
 
   *wr_entry_p = NULL;
   rv = pthread_mutex_lock (&writer_info->wr_list_mutex);
@@ -2035,18 +1909,13 @@ logwr_register_writer_entry (LOGWR_ENTRY ** wr_entry_p, THREAD_ENTRY * thread_p,
  *
  * Note:
  */
-static
-  bool
+static bool
 logwr_unregister_writer_entry (LOGWR_ENTRY * wr_entry, int status)
 {
-  LOGWR_ENTRY *
-    entry;
-  bool
-    is_all_done;
-  int
-    rv;
-  LOGWR_INFO *
-    writer_info = log_Gl.writer_info;
+  LOGWR_ENTRY *entry;
+  bool is_all_done;
+  int rv;
+  LOGWR_INFO *writer_info = log_Gl.writer_info;
 
   rv = pthread_mutex_lock (&writer_info->wr_list_mutex);
 
@@ -2066,8 +1935,7 @@ logwr_unregister_writer_entry (LOGWR_ENTRY * wr_entry, int status)
 
   if (status == LOGWR_STATUS_ERROR)
     {
-      LOGWR_ENTRY *
-	prev_entry = NULL;
+      LOGWR_ENTRY *prev_entry = NULL;
       entry = writer_info->writer_list;
       while (entry)
 	{
@@ -2111,37 +1979,21 @@ static int
 logwr_pack_log_pages (THREAD_ENTRY * thread_p, char *logpg_area, int *logpg_used_size, int *status, LOGWR_ENTRY * entry,
 		      bool copy_from_file)
 {
-  LOG_PAGEID
-    fpageid,
-    lpageid,
-    pageid;
-  char *
-    p;
-  LOG_PAGE *
-    log_pgptr;
-  INT64
-    num_logpgs;
-  LOG_LSA
-    nxio_lsa;
-  bool
-    is_hdr_page_only;
-  int
-    ha_file_status;
-  int
-    error_code;
+  LOG_PAGEID fpageid, lpageid, pageid;
+  char *p;
+  LOG_PAGE *log_pgptr;
+  INT64 num_logpgs;
+  LOG_LSA nxio_lsa;
+  bool is_hdr_page_only;
+  int ha_file_status;
+  int error_code;
 
-  LOG_ARV_HEADER
-    arvhdr;
-  LOG_HEADER *
-    hdr_ptr;
-  int
-    nxarv_num;
-  LOG_PAGEID
-    nxarv_pageid,
-    nxarv_phy_pageid;
+  LOG_ARV_HEADER arvhdr;
+  LOG_HEADER *hdr_ptr;
+  int nxarv_num;
+  LOG_PAGEID nxarv_pageid, nxarv_phy_pageid;
 
-  LOG_LSA
-    eof_lsa;
+  LOG_LSA eof_lsa;
 
   fpageid = NULL_PAGEID;
   lpageid = NULL_PAGEID;
@@ -2225,8 +2077,7 @@ logwr_pack_log_pages (THREAD_ENTRY * thread_p, char *logpg_area, int *logpg_used
 	}
       else
 	{
-	  LOG_ARV_HEADER
-	    arvhdr;
+	  LOG_ARV_HEADER arvhdr;
 
 	  /* If the fpageid is in archive log, fetch the page and the header page in the archive */
 	  if (logpb_fetch_from_archive (thread_p, fpageid, NULL, NULL, &arvhdr, false) == NULL)
@@ -2360,14 +2211,10 @@ logwr_cs_exit (THREAD_ENTRY * thread_p, bool * check_cs_own)
 static void
 logwr_write_end (THREAD_ENTRY * thread_p, LOGWR_INFO * writer_info, LOGWR_ENTRY * entry, int status)
 {
-  int
-    rv;
-  int
-    tran_index;
-  int
-    prev_status;
-  INT64
-    saved_start_time;
+  int rv;
+  int tran_index;
+  int prev_status;
+  INT64 saved_start_time;
 
   rv = pthread_mutex_lock (&writer_info->flush_end_mutex);
 
@@ -2403,8 +2250,7 @@ logwr_set_eof_lsa (THREAD_ENTRY * thread_p, LOGWR_ENTRY * entry)
   return;
 }
 
-static
-  bool
+static bool
 logwr_is_delayed (THREAD_ENTRY * thread_p, LOGWR_ENTRY * entry)
 {
   logwr_set_eof_lsa (thread_p, entry);
@@ -2440,40 +2286,23 @@ logwr_update_last_sent_eof_lsa (LOGWR_ENTRY * entry)
 int
 xlogwr_get_log_pages (THREAD_ENTRY * thread_p, LOG_PAGEID first_pageid, LOGWR_MODE mode)
 {
-  LOGWR_ENTRY *
-    entry;
-  char *
-    logpg_area;
-  int
-    logpg_used_size;
-  LOG_PAGEID
-    next_fpageid;
-  LOGWR_MODE
-    next_mode;
-  LOGWR_MODE
-    orig_mode = LOGWR_MODE_ASYNC;
-  int
-    status;
-  int
-    timeout;
-  int
-    rv;
-  int
-    error_code;
-  bool
-    check_cs_own = false;
-  bool
-    is_interrupted = false;
-  bool
-    copy_from_file = false;
-  bool
-    need_cs_exit_after_send = true;
-  struct timespec
-    to;
-  LOGWR_INFO *
-    writer_info = log_Gl.writer_info;
-  bool
-    copy_from_first_phy_page = false;
+  LOGWR_ENTRY *entry;
+  char *logpg_area;
+  int logpg_used_size;
+  LOG_PAGEID next_fpageid;
+  LOGWR_MODE next_mode;
+  LOGWR_MODE orig_mode = LOGWR_MODE_ASYNC;
+  int status;
+  int timeout;
+  int rv;
+  int error_code;
+  bool check_cs_own = false;
+  bool is_interrupted = false;
+  bool copy_from_file = false;
+  bool need_cs_exit_after_send = true;
+  struct timespec to;
+  LOGWR_INFO *writer_info = log_Gl.writer_info;
+  bool copy_from_first_phy_page = false;
 
   logpg_used_size = 0;
   logpg_area = (char *) db_private_alloc (thread_p, (LOGWR_COPY_LOG_BUFFER_NPAGES * LOG_PAGESIZE));
@@ -2518,8 +2347,7 @@ xlogwr_get_log_pages (THREAD_ENTRY * thread_p, LOG_PAGEID first_pageid, LOGWR_MO
 
       if (entry->status == LOGWR_STATUS_WAIT)
 	{
-	  bool
-	    continue_checking = true;
+	  bool continue_checking = true;
 
 	  if (mode == LOGWR_MODE_ASYNC)
 	    {
@@ -2724,16 +2552,11 @@ error:
 LOG_PAGEID
 logwr_get_min_copied_fpageid (void)
 {
-  LOGWR_INFO *
-    writer_info = log_Gl.writer_info;
-  LOGWR_ENTRY *
-    entry;
-  int
-    num_entries = 0;
-  LOG_PAGEID
-    min_fpageid = LOGPAGEID_MAX;
-  int
-    rv;
+  LOGWR_INFO *writer_info = log_Gl.writer_info;
+  LOGWR_ENTRY *entry;
+  int num_entries = 0;
+  LOG_PAGEID min_fpageid = LOGPAGEID_MAX;
+  int rv;
 
   rv = pthread_mutex_lock (&writer_info->wr_list_mutex);
 
