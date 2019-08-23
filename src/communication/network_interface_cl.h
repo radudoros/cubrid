@@ -33,21 +33,21 @@
 
 #include <stdio.h>
 
+#include "connection_defs.h"
 #include "dbtype_def.h"
 #include "lob_locator.hpp"
-#include "replication.h"
-#include "server_interface.h"
-#include "perf_monitor.h"
-#include "storage_common.h"
-#include "object_domain.h"
 #include "query_list.h"
 #include "query_monitoring.hpp"
-#include "statistics.h"
-#include "connection_defs.h"
-#include "log_writer.h"
 #include "language_support.h"
 #include "log_common_impl.h"
+#include "log_writer.h"
+#include "object_domain.h"
 #include "parse_tree.h"
+#include "perf_monitor.h"
+#include "replication.h"
+#include "server_interface.h"
+#include "statistics.h"
+#include "storage_common.h"
 #include "timezone_lib_common.h"
 
 // forward declarations
@@ -210,7 +210,9 @@ extern int boot_copy (const char *from_dbname, const char *new_db_name, const ch
 		      const char *fileof_vols_and_copypaths, bool newdb_overwrite);
 extern int boot_emergency_patch (const char *db_name, bool recreate_log, DKNPAGES log_npages, const char *db_locale,
 				 FILE * out_fp);
-extern HA_SERVER_STATE boot_change_ha_mode (HA_SERVER_STATE state, bool force, int timeout);
+extern
+  ha_operations::SERVER_STATE
+boot_change_ha_mode (ha_operations::SERVER_STATE state, bool force, int timeout);
 extern int boot_notify_ha_log_applier_state (HA_LOG_APPLIER_STATE state);
 extern char *stats_get_statistics_from_server (OID * classoid, unsigned int timestamp, int *length_ptr);
 extern int stats_update_statistics (OID * classoid, int with_fullscan);

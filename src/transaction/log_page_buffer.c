@@ -1368,7 +1368,7 @@ logpb_initialize_header (THREAD_ENTRY * thread_p, LOG_HEADER * loghdr, const cha
     }
   logpb_initialize_backup_info (loghdr);
 
-  loghdr->ha_server_state = HA_SERVER_STATE_IDLE;
+  loghdr->ha_server_state = ha_operations::SERVER_STATE_IDLE;
   loghdr->ha_file_status = -1;
   LSA_SET_NULL (&loghdr->eof_lsa);
   LSA_SET_NULL (&loghdr->smallest_lsa_at_last_chkpt);

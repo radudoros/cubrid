@@ -40,6 +40,7 @@
 #include "mprec.h"
 #include "system_parameter.h"
 #include "environment_variable.h"
+#include "ha_operations.hpp"
 #include "heartbeat.h"
 #include "hostname.hpp"
 #if defined (WINDOWS)
@@ -516,13 +517,16 @@ int
 changemode_keyword (int *keyval_p, char **keystr_p)
 {
   static UTIL_KEYWORD keywords[] = {
-    {HA_SERVER_STATE_IDLE, HA_SERVER_STATE_IDLE_STR},
-    {HA_SERVER_STATE_ACTIVE, HA_SERVER_STATE_ACTIVE_STR},
-    {HA_SERVER_STATE_TO_BE_ACTIVE, HA_SERVER_STATE_TO_BE_ACTIVE_STR},
-    {HA_SERVER_STATE_STANDBY, HA_SERVER_STATE_STANDBY_STR},
-    {HA_SERVER_STATE_TO_BE_STANDBY, HA_SERVER_STATE_TO_BE_STANDBY_STR},
-    {HA_SERVER_STATE_MAINTENANCE, HA_SERVER_STATE_MAINTENANCE_STR},
-    {HA_SERVER_STATE_DEAD, HA_SERVER_STATE_DEAD_STR},
+    {ha_operations::SERVER_STATE_IDLE, ha_operations::server_state_string (ha_operations::SERVER_STATE_IDLE)},
+    {ha_operations::SERVER_STATE_ACTIVE, ha_operations::server_state_string (ha_operations::SERVER_STATE_ACTIVE)},
+    {ha_operations::SERVER_STATE_TO_BE_ACTIVE,
+     ha_operations::server_state_string (ha_operations::SERVER_STATE_TO_BE_ACTIVE)},
+    {ha_operations::SERVER_STATE_STANDBY, ha_operations::server_state_string (ha_operations::SERVER_STATE_STANDBY)},
+    {ha_operations::SERVER_STATE_TO_BE_STANDBY,
+     ha_operations::server_state_string (ha_operations::SERVER_STATE_TO_BE_STANDBY)},
+    {ha_operations::SERVER_STATE_MAINTENANCE,
+     ha_operations::server_state_string (ha_operations::SERVER_STATE_MAINTENANCE)},
+    {ha_operations::SERVER_STATE_DEAD, ha_operations::server_state_string (ha_operations::SERVER_STATE_DEAD)},
     {-1, NULL}
   };
 

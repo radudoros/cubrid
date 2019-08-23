@@ -66,6 +66,7 @@
 #endif
 #include "connection_cl.h"
 #include "dbtype.h"
+#include "ha_server_state.hpp"
 
 #if !defined(WINDOWS)
 void (*prev_sigfpe_handler) (int) = SIG_DFL;
@@ -2870,18 +2871,18 @@ db_get_host_connected (void)
 int
 db_get_ha_server_state (char *buffer, int maxlen)
 {
-  HA_SERVER_STATE ha_state;
+  ha_operations::SERVER_STATE ha_state;
 
   CHECK_CONNECT_ERROR ();
 
 #if defined(CS_MODE)
   ha_state = boot_get_ha_server_state ();
 #else
-  ha_state = HA_SERVER_STATE_NA;
+  ha_state = ha_operations::SERVER_STATE_NA;
 #endif
   if (buffer)
     {
-      strncpy (buffer, css_ha_server_state_string (ha_state), maxlen);
+      strncpy (buffer, ha_operations::server_state_string (ha_state), maxlen);
     }
   return ha_state;
 }

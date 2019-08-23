@@ -736,21 +736,21 @@ xtran_should_connection_reset (THREAD_ENTRY * thread_p, bool has_updated)
 {
   int client_type;
   const char *hostname;
-  HA_SERVER_STATE ha_state;
+  ha_operations::SERVER_STATE ha_state;
   bool should_conn_reset = false;
 
   client_type = logtb_find_current_client_type (thread_p);
   hostname = logtb_find_current_client_hostname (thread_p);
-  ha_state = css_ha_server_state ();
+  ha_state = ha_operations::get_server_state ();
 
-  if (has_updated && ha_state == HA_SERVER_STATE_TO_BE_STANDBY && BOOT_NORMAL_CLIENT_TYPE (client_type))
+  if (has_updated && ha_state == ha_operations::SERVER_STATE_TO_BE_STANDBY && BOOT_NORMAL_CLIENT_TYPE (client_type))
     {
       should_conn_reset = true;
       er_log_debug (ARG_FILE_LINE,
 		    "xtran_should_connection_reset: (has_updated && to-be-standby && normal client)"
 		    " DB_CONNECTION_STATUS_RESET\n");
     }
-  else if (ha_state == HA_SERVER_STATE_STANDBY)
+  else if (ha_state == ha_operations::SERVER_STATE_STANDBY)
     {
       /* be aware that the order of if conditions is important */
       if (BOOT_CSQL_CLIENT_TYPE (client_type))
@@ -783,13 +783,13 @@ xtran_should_connection_reset (THREAD_ENTRY * thread_p, bool has_updated)
 	  thread_p->conn_entry->reset_on_commit = false;
 	}
     }
-  else if (ha_state == HA_SERVER_STATE_ACTIVE && client_type == BOOT_CLIENT_SLAVE_ONLY_BROKER)
+  else if (ha_state == ha_operations::SERVER_STATE_ACTIVE && client_type == BOOT_CLIENT_SLAVE_ONLY_BROKER)
     {
       should_conn_reset = true;
       er_log_debug (ARG_FILE_LINE,
 		    "xtran_should_connection_reset: (active && slave only broker) DB_CONNECTION_STATUS_RESET\n");
     }
-  else if (ha_state == HA_SERVER_STATE_MAINTENANCE
+  else if (ha_state == ha_operations::SERVER_STATE_MAINTENANCE
 	   && !BOOT_IS_ALLOWED_CLIENT_TYPE_IN_MT_MODE (hostname, boot_Host_name, client_type))
     {
       should_conn_reset = true;

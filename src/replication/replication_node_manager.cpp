@@ -113,7 +113,7 @@ namespace cubreplication
 	    g_master_node = new master_node (g_hostname.c_str (), g_stream, g_stream_file);
 	  }
 
-	css_finish_transit (thread_p, force, HA_SERVER_STATE_ACTIVE);
+	ha_operations::finish_transit (thread_p, force, ha_operations::SERVER_STATE_ACTIVE);
 	dec_ha_tasks ();
 	g_commute_cv.notify_all ();
       };
@@ -143,7 +143,7 @@ namespace cubreplication
 	    g_slave_node = new slave_node (g_hostname.c_str (), g_stream, g_stream_file);
 	  }
 
-	css_finish_transit (thread_p, force, HA_SERVER_STATE_STANDBY);
+	ha_operations::finish_transit (thread_p, force, ha_operations::SERVER_STATE_STANDBY);
 	dec_ha_tasks ();
 	g_commute_cv.notify_all ();
       };
@@ -166,7 +166,7 @@ namespace cubreplication
       return g_slave_node;
     }
 
-    void wait_commute (HA_SERVER_STATE &ha_state, HA_SERVER_STATE req_state)
+    void wait_commute (ha_operations::SERVER_STATE &ha_state, ha_operations::SERVER_STATE req_state)
     {
       std::unique_lock<std::mutex> ul (g_commute_mtx);
       g_commute_cv.wait (ul, [req_state, &ha_state] ()

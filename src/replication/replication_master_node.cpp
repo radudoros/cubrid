@@ -131,10 +131,10 @@ namespace cubreplication
   {
     er_log_debug_replication (ARG_FILE_LINE, "add_ctrl_chn");
 
-    if (css_ha_server_state () != HA_SERVER_STATE_ACTIVE)
+    if (ha_operations::get_server_state () != ha_operations::SERVER_STATE_ACTIVE)
       {
 	er_log_debug_replication (ARG_FILE_LINE, "add_ctrl_chn invalid server state :%s",
-				  css_ha_server_state_string (css_ha_server_state ()));
+				  ha_operations::server_state_string (ha_operations::get_server_state ()));
 	return;
       }
 

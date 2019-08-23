@@ -69,8 +69,9 @@
 #if defined (SA_MODE)
 #include "thread_manager.hpp"
 #endif // SA_MODE
-#include "xasl.h"
+#include "ha_operations.hpp"	// TODO: remove dependency
 #include "lob_locator.hpp"
+#include "xasl.h"
 
 /*
  * Use db_clear_private_heap instead of db_destroy_private_heap
@@ -3484,7 +3485,7 @@ boot_register_client (BOOT_CLIENT_CREDENTIAL * client_credential, int client_loc
 	  ptr = or_unpack_float (ptr, &server_credential->disk_compatibility);
 
 	  ptr = or_unpack_int (ptr, &ha_state_to_int);
-	  server_credential->ha_server_state = (HA_SERVER_STATE) ha_state_to_int;
+	  server_credential->ha_server_state = (ha_operations::SERVER_STATE) ha_state_to_int;
 
 	  ptr = or_unpack_int (ptr, &server_credential->db_charset);
 	  ptr = or_unpack_string (ptr, &server_credential->db_lang);
@@ -5106,13 +5107,13 @@ boot_emergency_patch (const char *db_name, bool recreate_log, DKNPAGES log_npage
  * boot_change_ha_mode - change server's HA state
  *   return: new state
  */
-HA_SERVER_STATE
-boot_change_ha_mode (HA_SERVER_STATE state, bool force, int timeout)
+ha_operations::SERVER_STATE
+boot_change_ha_mode (ha_operations::SERVER_STATE state, bool force, int timeout)
 {
 #if defined(CS_MODE)
   int req_error;
   int server_state;
-  HA_SERVER_STATE cur_state = HA_SERVER_STATE_NA;
+  ha_operations::SERVER_STATE cur_state = ha_operations::SERVER_STATE_NA;
   OR_ALIGNED_BUF (OR_INT_SIZE) a_reply;
   char *reply;
   OR_ALIGNED_BUF (OR_INT_SIZE + OR_INT_SIZE + OR_INT_SIZE) a_request;
@@ -5132,14 +5133,14 @@ boot_change_ha_mode (HA_SERVER_STATE state, bool force, int timeout)
   if (!req_error)
     {
       or_unpack_int (reply, &server_state);
-      cur_state = (HA_SERVER_STATE) server_state;
+      cur_state = (ha_operations::SERVER_STATE) server_state;
     }
 
   return cur_state;
 #else /* CS_MODE */
   /* Cannot run in standalone mode */
   er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_NOT_IN_STANDALONE, 1, "changemode");
-  return HA_SERVER_STATE_NA;
+  return ha_operations::SERVER_STATE_NA;
 #endif /* !CS_MODE */
 }
 
@@ -8619,7 +8620,7 @@ logwr_get_log_pages (LOGWR_CONTEXT * ctx_ptr)
 	      logwr_write_log_pages ();
 	    }
 	  /* Write the server is dead at the log header */
-	  logwr_Gl.hdr.ha_server_state = HA_SERVER_STATE_DEAD;
+	  logwr_Gl.hdr.ha_server_state = ha_operations::SERVER_STATE_DEAD;
 	  logwr_flush_header_page ();
 	  ctx_ptr->shutdown = true;
 	}

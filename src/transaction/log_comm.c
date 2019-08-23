@@ -287,7 +287,7 @@ log_does_allow_replication (void)
   return true;
 
 #elif defined(SERVER_MODE)	/* CS_MODE */
-  HA_SERVER_STATE ha_state;
+  ha_operations::SERVER_STATE ha_state;
 
   /* Vacuum workers are not allowed to reach this code */
   if (LOG_FIND_CURRENT_TDES () == NULL || !LOG_FIND_CURRENT_TDES ()->is_active_worker_transaction ())
@@ -306,8 +306,8 @@ log_does_allow_replication (void)
       return false;
     }
 
-  ha_state = css_ha_server_state ();
-  if (ha_state != HA_SERVER_STATE_ACTIVE && ha_state != HA_SERVER_STATE_TO_BE_STANDBY)
+  ha_state = ha_operations::get_server_state ();
+  if (ha_state != ha_operations::SERVER_STATE_ACTIVE && ha_state != ha_operations::SERVER_STATE_TO_BE_STANDBY)
     {
       return false;
     }

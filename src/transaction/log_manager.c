@@ -9153,7 +9153,7 @@ log_active_log_header_next_scan (THREAD_ENTRY * thread_p, int cursor, DB_VALUE *
       goto exit_on_error;
     }
 
-  str = css_ha_server_state_string ((HA_SERVER_STATE) header->ha_server_state);
+  str = ha_operations::server_state_string ((ha_operations::SERVER_STATE) header->ha_server_state);
   db_make_string_by_const_str (out_values[idx], str);
   idx++;
 
@@ -9971,13 +9971,13 @@ log_check_ha_delay_info_execute (cubthread::entry &thread_ref)
   int delay_limit_in_secs;
   int acceptable_delay_in_secs;
   int curr_delay_in_secs;
-  HA_SERVER_STATE server_state;
+  ha_operations::SERVER_STATE server_state;
 
   csect_enter (&thread_ref, CSECT_HA_SERVER_STATE, INF_WAIT);
 
-  server_state = css_ha_server_state ();
+  server_state = ha_operations::get_server_state ();
 
-  if (server_state == HA_SERVER_STATE_ACTIVE || server_state == HA_SERVER_STATE_TO_BE_STANDBY)
+  if (server_state == ha_operations::SERVER_STATE_ACTIVE || server_state == ha_operations::SERVER_STATE_TO_BE_STANDBY)
     {
       css_unset_ha_repl_delayed ();
       perfmon_set_stat (&thread_ref, PSTAT_HA_REPL_DELAY, 0, true);

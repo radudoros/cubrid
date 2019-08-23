@@ -2719,8 +2719,9 @@ boot_restart_server (THREAD_ENTRY * thread_p, bool print_restart, const char *db
     }
 
   /* set server's starting mode for HA according to the 'ha_mode' parameter */
-  css_change_ha_server_state (thread_p, (HA_SERVER_STATE) prm_get_integer_value (PRM_ID_HA_SERVER_STATE), true,
-			      HA_CHANGE_MODE_IMMEDIATELY, true);
+  ha_operations::change_server_state (thread_p,
+				      (ha_operations::SERVER_STATE) prm_get_integer_value (PRM_ID_HA_SERVER_STATE),
+				      true, HA_CHANGE_MODE_IMMEDIATELY, true);
 #endif
 
   /* initialize partitions cache */
@@ -3119,9 +3120,9 @@ xboot_register_client (THREAD_ENTRY * thread_p, BOOT_CLIENT_CREDENTIAL * client_
       server_credential->log_page_size = LOG_PAGESIZE;
       server_credential->disk_compatibility = rel_disk_compatible ();
 #if defined (SERVER_MODE)
-      server_credential->ha_server_state = css_ha_server_state ();
+      server_credential->ha_server_state = ha_operations::get_server_state ();
 #else
-      server_credential->ha_server_state = (HA_SERVER_STATE) prm_get_integer_value (PRM_ID_HA_SERVER_STATE);
+      server_credential->ha_server_state = (ha_operations::SERVER_STATE) prm_get_integer_value (PRM_ID_HA_SERVER_STATE);
 #endif
       memcpy (server_credential->server_session_key, boot_Server_session_key, SERVER_SESSION_KEY_SIZE);
       server_credential->db_charset = lang_charset ();

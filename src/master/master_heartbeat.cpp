@@ -2924,7 +2924,7 @@ static int
 hb_resource_send_changemode (HB_PROC_ENTRY *proc)
 {
   int error = NO_ERROR;
-  HA_SERVER_STATE state;
+  ha_operations::SERVER_STATE state;
   int nstate;
   int sig = 0;
   char error_string[LINE_MAX] = "";
@@ -2960,10 +2960,10 @@ hb_resource_send_changemode (HB_PROC_ENTRY *proc)
   switch (hb_Resource->state)
     {
     case cubhb::node_state::MASTER:
-      state = HA_SERVER_STATE_ACTIVE;
+      state = ha_operations::SERVER_STATE_ACTIVE;
       break;
     case cubhb::node_state::TO_BE_SLAVE:
-      state = HA_SERVER_STATE_STANDBY;
+      state = ha_operations::SERVER_STATE_STANDBY;
       break;
     case cubhb::node_state::SLAVE:
     default:
@@ -2982,14 +2982,14 @@ hb_resource_send_changemode (HB_PROC_ENTRY *proc)
     {
       snprintf (error_string, LINE_MAX,
 		"Failed to send changemode request to the server. (state:%d[%s], args:[%s], pid:%d)", state,
-		css_ha_server_state_string (state), proc->args, proc->pid);
+		ha_operations::server_state_string (state), proc->args, proc->pid);
       MASTER_ER_SET (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_HA_GENERIC_ERROR, 1, error_string);
 
       return ER_FAILED;
     }
 
   snprintf (error_string, LINE_MAX, "Send changemode request to the server. (state:%d[%s], args:[%s], pid:%d)",
-	    state, css_ha_server_state_string (state), proc->args, proc->pid);
+	    state, ha_operations::server_state_string (state), proc->args, proc->pid);
   MASTER_ER_SET (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_HA_GENERIC_ERROR, 1, error_string);
 
   return NO_ERROR;
@@ -3006,7 +3006,7 @@ hb_resource_receive_changemode (CSS_CONN_ENTRY *conn)
 {
   int sfd, rv;
   HB_PROC_ENTRY *proc;
-  HA_SERVER_STATE state;
+  ha_operations::SERVER_STATE state;
   int nstate;
   char error_string[LINE_MAX] = "";
 
@@ -3020,7 +3020,7 @@ hb_resource_receive_changemode (CSS_CONN_ENTRY *conn)
     {
       return;
     }
-  state = (HA_SERVER_STATE) ntohl (nstate);
+  state = (ha_operations::SERVER_STATE) ntohl (nstate);
 
   sfd = conn->fd;
   rv = pthread_mutex_lock (&hb_Cluster->lock);
@@ -3034,26 +3034,26 @@ hb_resource_receive_changemode (CSS_CONN_ENTRY *conn)
     }
 
   snprintf (error_string, LINE_MAX, "Receive changemode response from the server. (state:%d[%s], args:[%s], pid:%d)",
-	    state, css_ha_server_state_string (state), proc->args, proc->pid);
+	    state, ha_operations::server_state_string (state), proc->args, proc->pid);
   MASTER_ER_SET (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_HA_GENERIC_ERROR, 1, error_string);
 
   switch (state)
     {
-    case HA_SERVER_STATE_ACTIVE:
+    case ha_operations::SERVER_STATE_ACTIVE:
       proc->state = HB_PSTATE_REGISTERED_AND_ACTIVE;
       break;
 
-    case HA_SERVER_STATE_TO_BE_ACTIVE:
+    case ha_operations::SERVER_STATE_TO_BE_ACTIVE:
       proc->state = HB_PSTATE_REGISTERED_AND_TO_BE_ACTIVE;
       break;
 
-    case HA_SERVER_STATE_STANDBY:
+    case ha_operations::SERVER_STATE_STANDBY:
       proc->state = HB_PSTATE_REGISTERED_AND_STANDBY;
       hb_Cluster->state = cubhb::node_state::SLAVE;
       hb_Resource->state = cubhb::node_state::SLAVE;
       break;
 
-    case HA_SERVER_STATE_TO_BE_STANDBY:
+    case ha_operations::SERVER_STATE_TO_BE_STANDBY:
       proc->state = HB_PSTATE_REGISTERED_AND_TO_BE_STANDBY;
       break;
 

@@ -81,7 +81,9 @@
 #include "xasl.h"
 #include "xasl_cache.h"
 #include "elo.h"
+#include "ha_operations.hpp"
 #include "transaction_transient.hpp"
+
 
 #if defined (SUPPRESS_STRLEN_WARNING)
 #define strlen(s1)  ((int) strlen(s1))
@@ -432,7 +434,7 @@ server_capabilities (void)
     }
   if (HA_GET_MODE () == HA_MODE_REPLICA)
     {
-      assert_release (css_ha_server_state () == HA_SERVER_STATE_STANDBY);
+      assert_release (ha_operations::get_server_state () == ha_operations::SERVER_STATE_STANDBY);
       capabilities |= NET_CAP_HA_REPLICA;
     }
 
@@ -3558,20 +3560,20 @@ void
 sboot_change_ha_mode (THREAD_ENTRY * thread_p, unsigned int rid, char *request, int reqlen)
 {
   int req_state, force, timeout;
-  HA_SERVER_STATE state;
+  ha_operations::SERVER_STATE state;
   DB_INFO *db;
   char *ptr;
   OR_ALIGNED_BUF (OR_INT_SIZE) a_reply;
   char *reply = OR_ALIGNED_BUF_START (a_reply);
 
   ptr = or_unpack_int (request, &req_state);
-  state = (HA_SERVER_STATE) req_state;
+  state = (ha_operations::SERVER_STATE) req_state;
   ptr = or_unpack_int (ptr, &force);
   ptr = or_unpack_int (ptr, &timeout);
 
-  if (state > HA_SERVER_STATE_IDLE && state < HA_SERVER_STATE_DEAD)
+  if (state > ha_operations::SERVER_STATE_IDLE && state < ha_operations::SERVER_STATE_DEAD)
     {
-      if (css_change_ha_server_state (thread_p, state, force, timeout, false) != NO_ERROR)
+      if (ha_operations::change_server_state (thread_p, state, force, timeout, false) != NO_ERROR)
 	{
 	  er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ERR_CSS_ERROR_FROM_SERVER, 1, "Cannot change server HA mode");
 	  (void) return_error_to_client (thread_p, rid);
@@ -3588,7 +3590,7 @@ sboot_change_ha_mode (THREAD_ENTRY * thread_p, unsigned int rid, char *request, 
 	}
     }
 
-  state = css_ha_server_state ();
+  state = ha_operations::get_server_state ();
   or_pack_int (reply, (int) state);
   css_send_data_to_client (thread_p->conn_entry, rid, reply, OR_ALIGNED_BUF_SIZE (a_reply));
 }

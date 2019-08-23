@@ -176,15 +176,15 @@ chksum_report_header (FILE * fp, const char *database)
 {
   time_t report_time;
   struct tm *report_tm_p;
-  HA_SERVER_STATE state = HA_SERVER_STATE_NA;
+  ha_operations::SERVER_STATE state = ha_operations::SERVER_STATE_NA;
 
   report_time = time (NULL);
   report_tm_p = localtime (&report_time);
 
-  state = css_ha_server_state ();
+  state = ha_operations::get_server_state ();
 
   CHKSUM_PRINT_AND_LOG (fp, "=================================" "===============================\n");
-  CHKSUM_PRINT_AND_LOG (fp, " target DB: %s (state: %s)\n", database, css_ha_server_state_string (state));
+  CHKSUM_PRINT_AND_LOG (fp, " target DB: %s (state: %s)\n", database, ha_operations::server_state_string (state));
   CHKSUM_PRINT_AND_LOG (fp, " report time: %04d-%02d-%02d %02d:%02d:%02d\n", report_tm_p->tm_year + 1900,
 			report_tm_p->tm_mon + 1, report_tm_p->tm_mday, report_tm_p->tm_hour, report_tm_p->tm_min,
 			report_tm_p->tm_sec);
@@ -2084,7 +2084,7 @@ checksumdb (UTIL_FUNCTION_ARG * arg)
   char *excl_class_file = NULL;
   char *checksum_table = NULL;
   bool report_only = false;
-  HA_SERVER_STATE ha_state = HA_SERVER_STATE_NA;
+  ha_operations::SERVER_STATE ha_state = ha_operations::SERVER_STATE_NA;
   int error = NO_ERROR, ret;
 
   memset (&chksum_arg, 0, sizeof (CHKSUM_ARG));
@@ -2228,12 +2228,12 @@ begin:
     }
   else
     {
-      ha_state = css_ha_server_state ();
-      if (ha_state != HA_SERVER_STATE_ACTIVE)
+      ha_state = ha_operations::get_server_state ();
+      if (ha_state != ha_operations::SERVER_STATE_ACTIVE)
 	{
 	  PRINT_AND_LOG_ERR_MSG (msgcat_message
 				 (MSGCAT_CATALOG_UTILS, MSGCAT_UTIL_SET_CHECKSUMDB, CHECKSUMDB_MSG_MUST_RUN_ON_ACTIVE),
-				 database_name, css_ha_server_state_string (ha_state));
+				 database_name, ha_operations::server_state_string (ha_state));
 
 	  (void) db_shutdown ();
 

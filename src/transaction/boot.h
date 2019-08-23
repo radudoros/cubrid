@@ -26,7 +26,8 @@
 
 #include "client_credentials.hpp"
 #include "es_common.h"
-#include "ha_server_state.h"
+#include "ha_server_state.hpp"
+#include "ha_operations.hpp"
 #include "porting.h"
 #include "storage_common.h"
 
@@ -106,8 +107,6 @@ struct boot_db_path_info
 /*
  * HA server state
  */
-
-
 typedef struct boot_server_credential BOOT_SERVER_CREDENTIAL;
 struct boot_server_credential
 {
@@ -120,7 +119,7 @@ struct boot_server_credential
   PGLENGTH page_size;
   PGLENGTH log_page_size;
   float disk_compatibility;
-  HA_SERVER_STATE ha_server_state;	/* HA_SERVER_STATE */
+    ha_operations::SERVER_STATE ha_server_state;	/* HA_SERVER_STATE */
   char server_session_key[SERVER_SESSION_KEY_SIZE];
   int db_charset;
   char *db_lang;

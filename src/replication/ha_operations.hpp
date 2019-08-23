@@ -18,49 +18,26 @@
  */
 
 /*
- * replication_node_manager.hpp
+ * ha_operations.hpp
  */
 
-#ifndef _REPLICATION_NODE_MANAGER_HPP_
-#define _REPLICATION_NODE_MANAGER_HPP_
+#ifndef _HA_OPERATIONS_HPP_
+#define _HA_OPERATIONS_HPP_
 
-#include "cubstream.hpp"
-#include "server_support.h"
-#include "ha_operations.hpp"
-
-namespace cubstream
-{
-  class multi_thread_stream;
-  class stream_file;
-}
+#include "ha_server_state.hpp"
 
 namespace cubthread
 {
   class entry;
 }
 
-namespace cubreplication
+namespace ha_operations
 {
-  class master_node;
-  class replication_node;
-  class slave_node;
 
-  namespace replication_node_manager
-  {
-    void init (const char *name);
-    void finalize ();
-
-    master_node *get_master_node ();
-    slave_node *get_slave_node ();
-
-    void start_commute_to_master_state (cubthread::entry *thread_p, bool force);
-    void start_commute_to_slave_state (cubthread::entry *thread_p, bool force);
-
-    void wait_commute (ha_operations::SERVER_STATE &ha_state, ha_operations::SERVER_STATE req_state);
-
-    void inc_ha_tasks ();
-    void dec_ha_tasks ();
-  };
+  //const char * server_state_string (SERVER_STATE state);
+  int change_server_state (cubthread::entry *thread_p, SERVER_STATE state, bool force, int timeout, bool heartbeat);
+  SERVER_STATE transit_server_state (cubthread::entry *thread_p, SERVER_STATE req_state);
+  void finish_transit (cubthread::entry   *thread_p, bool force, SERVER_STATE req_state);
 }
 
-#endif
+#endif /* _HA_OPERATIONS_HPP_ */

@@ -6186,13 +6186,15 @@ la_log_record_process (LOG_RECORD_HEADER * lrec, LOG_LSA * final, LOG_PAGE * pg_
 	  break;
 	}
 
-      if (ha_server_state->state != HA_SERVER_STATE_ACTIVE && ha_server_state->state != HA_SERVER_STATE_TO_BE_STANDBY)
+      if (ha_server_state->state != ha_operations::SERVER_STATE_ACTIVE
+	  && ha_server_state->state != ha_operations::SERVER_STATE_TO_BE_STANDBY)
 	{
 	  if (la_Info.db_lockf_vdes != NULL_VOLDES)
 	    {
 	      int ret = snprintf (buffer, sizeof (buffer) - 1, "the state of HA server (%s@%s) is changed to %s",
 				  la_slave_db_name, la_peer_host,
-				  css_ha_server_state_string ((HA_SERVER_STATE) ha_server_state->state));
+				  ha_operations::server_state_string ((ha_operations::SERVER_STATE) ha_server_state->
+								      state));
 	      (void) ret;	// suppress format-truncate warning
 	      er_set (ER_NOTIFICATION_SEVERITY, ARG_FILE_LINE, ER_HA_GENERIC_ERROR, 1, buffer);
 
@@ -6306,8 +6308,9 @@ la_change_state (void)
       sprintf (buffer,
 	       "change the state of HA server (%s@%s) from '%s' to '%s'",
 	       la_slave_db_name, la_peer_host,
-	       css_ha_server_state_string ((HA_SERVER_STATE) la_Info.last_server_state),
-	       css_ha_server_state_string ((HA_SERVER_STATE) la_Info.act_log.log_hdr->ha_server_state));
+	       ha_operations::server_state_string ((ha_operations::SERVER_STATE) la_Info.last_server_state),
+	       ha_operations::server_state_string ((ha_operations::SERVER_STATE) la_Info.act_log.log_hdr->
+						   ha_server_state));
       er_set (ER_NOTIFICATION_SEVERITY, ARG_FILE_LINE, ER_HA_GENERIC_ERROR, 1, buffer);
     }
 
@@ -6321,9 +6324,9 @@ la_change_state (void)
       /* check server's state with log header */
       switch (la_Info.act_log.log_hdr->ha_server_state)
 	{
-	case HA_SERVER_STATE_ACTIVE:
-	case HA_SERVER_STATE_TO_BE_STANDBY:
-	case HA_SERVER_STATE_TO_BE_ACTIVE:
+	case ha_operations::SERVER_STATE_ACTIVE:
+	case ha_operations::SERVER_STATE_TO_BE_STANDBY:
+	case ha_operations::SERVER_STATE_TO_BE_ACTIVE:
 	  if (la_Info.apply_state != HA_LOG_APPLIER_STATE_WORKING)
 	    {
 	      /* notify to slave db */
@@ -6331,16 +6334,16 @@ la_change_state (void)
 	    }
 	  break;
 
-	case HA_SERVER_STATE_DEAD:
-	case HA_SERVER_STATE_STANDBY:
-	case HA_SERVER_STATE_MAINTENANCE:
+	case ha_operations::SERVER_STATE_DEAD:
+	case ha_operations::SERVER_STATE_STANDBY:
+	case ha_operations::SERVER_STATE_MAINTENANCE:
 	  if (la_Info.apply_state != HA_LOG_APPLIER_STATE_DONE)
 	    {
 	      /* notify to slave db */
 	      new_state = HA_LOG_APPLIER_STATE_DONE;
 
 	      /* clear all repl_lists */
-	      if (la_Info.act_log.log_hdr->ha_server_state != HA_SERVER_STATE_DEAD)
+	      if (la_Info.act_log.log_hdr->ha_server_state != ha_operations::SERVER_STATE_DEAD)
 		{
 		  la_clear_all_repl_and_commit_list ();
 		}
@@ -6357,18 +6360,18 @@ la_change_state (void)
     {
       switch (la_Info.act_log.log_hdr->ha_server_state)
 	{
-	case HA_SERVER_STATE_ACTIVE:
-	case HA_SERVER_STATE_TO_BE_STANDBY:
+	case ha_operations::SERVER_STATE_ACTIVE:
+	case ha_operations::SERVER_STATE_TO_BE_STANDBY:
 	  if (la_Info.apply_state != HA_LOG_APPLIER_STATE_WORKING
 	      && la_Info.apply_state != HA_LOG_APPLIER_STATE_RECOVERING)
 	    {
 	      new_state = HA_LOG_APPLIER_STATE_RECOVERING;
 	    }
 	  break;
-	case HA_SERVER_STATE_TO_BE_ACTIVE:
-	case HA_SERVER_STATE_STANDBY:
-	case HA_SERVER_STATE_DEAD:
-	case HA_SERVER_STATE_MAINTENANCE:
+	case ha_operations::SERVER_STATE_TO_BE_ACTIVE:
+	case ha_operations::SERVER_STATE_STANDBY:
+	case ha_operations::SERVER_STATE_DEAD:
+	case ha_operations::SERVER_STATE_MAINTENANCE:
 	  if (la_Info.apply_state != HA_LOG_APPLIER_STATE_DONE
 	      && la_Info.apply_state != HA_LOG_APPLIER_STATE_RECOVERING)
 	    {
@@ -6974,7 +6977,8 @@ la_print_log_header (const char *database_name, LOG_HEADER * hdr, bool verbose)
   printf ("%-30s : %s (%ld)\n", "DB creation time", timebuf, tloc);
   printf ("%-30s : %lld | %d\n", "EOF LSA", (long long int) hdr->eof_lsa.pageid, (int) hdr->eof_lsa.offset);
   printf ("%-30s : %lld | %d\n", "Append LSA", (long long int) hdr->append_lsa.pageid, (int) hdr->append_lsa.offset);
-  printf ("%-30s : %s\n", "HA server state", css_ha_server_state_string ((HA_SERVER_STATE) hdr->ha_server_state));
+  printf ("%-30s : %s\n", "HA server state",
+	  ha_operations::server_state_string ((ha_operations::SERVER_STATE) hdr->ha_server_state));
   if (verbose)
     {
       printf ("%-30s : %s\n", "CUBRID release", hdr->db_release);
@@ -8049,7 +8053,7 @@ la_apply_log_file (const char *database_name, const char *log_path, const int ma
 #endif
 	    if (dummy_wait >= 0)
 	    {
-	      if (final_log_hdr.ha_server_state == HA_SERVER_STATE_DEAD
+	      if (final_log_hdr.ha_server_state == ha_operations::SERVER_STATE_DEAD
 		  && LSA_EQ (&last_eof_lsa, &final_log_hdr.eof_lsa))
 		{
 		  now = time (NULL);
@@ -8072,15 +8076,15 @@ la_apply_log_file (const char *database_name, const char *log_path, const int ma
 
 	  /* check log hdr's master state */
 	  if (la_Info.apply_state == HA_LOG_APPLIER_STATE_DONE
-	      && (final_log_hdr.ha_server_state != HA_SERVER_STATE_ACTIVE)
-	      && (final_log_hdr.ha_server_state != HA_SERVER_STATE_TO_BE_STANDBY))
+	      && (final_log_hdr.ha_server_state != ha_operations::SERVER_STATE_ACTIVE)
+	      && (final_log_hdr.ha_server_state != ha_operations::SERVER_STATE_TO_BE_STANDBY))
 	    {
 	      /* if there's no replication log to be applied, we should release dbname lock */
 	      clear_owner = true;
 	      error = la_unlock_dbname (&la_Info.db_lockf_vdes, la_slave_db_name, clear_owner);
 	      assert_release (error == NO_ERROR);
 
-	      if (final_log_hdr.ha_server_state != HA_SERVER_STATE_DEAD)
+	      if (final_log_hdr.ha_server_state != ha_operations::SERVER_STATE_DEAD)
 		{
 		  LSA_COPY (&la_Info.committed_lsa, &la_Info.final_lsa);
 		}
