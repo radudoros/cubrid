@@ -66,9 +66,9 @@ extern void boot_server_die_or_changed (void);
 extern void boot_client_all_finalize (bool iserfinal);
 #if defined(CS_MODE)
 extern char *boot_get_host_connected (void);
-extern
-  ha_operations::SERVER_STATE
-boot_get_ha_server_state (void);
+/* *INDENT-OFF* */
+extern ha_operations::SERVER_STATE boot_get_ha_server_state (void);
+/* *INDENT-ON* */
 extern const char *boot_get_lob_path (void);
 #endif /* CS_MODE */
 
