@@ -181,7 +181,7 @@ chksum_report_header (FILE * fp, const char *database)
   report_time = time (NULL);
   report_tm_p = localtime (&report_time);
 
-  state = ha_operations::get_server_state ();
+  state = boot_change_ha_mode (ha_operations::SERVER_STATE_NA, false, 0);
 
   CHKSUM_PRINT_AND_LOG (fp, "=================================" "===============================\n");
   CHKSUM_PRINT_AND_LOG (fp, " target DB: %s (state: %s)\n", database, ha_operations::server_state_string (state));
@@ -2228,7 +2228,7 @@ begin:
     }
   else
     {
-      ha_state = ha_operations::get_server_state ();
+      ha_state = boot_change_ha_mode (ha_operations::SERVER_STATE_NA, false, 0);
       if (ha_state != ha_operations::SERVER_STATE_ACTIVE)
 	{
 	  PRINT_AND_LOG_ERR_MSG (msgcat_message

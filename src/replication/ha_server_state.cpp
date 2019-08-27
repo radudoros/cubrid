@@ -57,9 +57,12 @@ namespace ha_operations
 
   SERVER_STATE ha_Server_state = SERVER_STATE_IDLE;
 
+#if defined (CS_MODE)
+#else
   SERVER_STATE &
   get_server_state ()
   {
     return ha_Server_state;
   }
+#endif
 }

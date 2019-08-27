@@ -51,6 +51,7 @@
 #include "system_parameter.h"
 #include "object_primitive.h"
 #include "locator_sr.h"
+#include "ha_operations.hpp"
 #include "heap_file.h"
 #include "system_catalog.h"
 #include "transform.h"

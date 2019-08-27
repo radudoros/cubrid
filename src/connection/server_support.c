@@ -27,6 +27,7 @@
 
 #include "config.h"
 #include "communication_server_channel.hpp"
+#include "ha_operations.hpp"
 #include "internal_tasks_worker_pool.hpp"
 #include "log_append.hpp"
 #include "multi_thread_stream.hpp"

@@ -36,7 +36,11 @@ namespace ha_operations
 
   const char *
   server_state_string (SERVER_STATE state);
+
+#if defined (CS_MODE)
+#else
   SERVER_STATE &get_server_state ();
+#endif
 }
 
 #endif // !_HA_SERVER_STATE_HPP_
