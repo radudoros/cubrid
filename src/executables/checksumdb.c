@@ -176,7 +176,7 @@ chksum_report_header (FILE * fp, const char *database)
 {
   time_t report_time;
   struct tm *report_tm_p;
-  ha_operations::SERVER_STATE state = ha_operations::SERVER_STATE_NA;
+  HA_SERVER_STATE state = ha_operations::SERVER_STATE_NA;
 
   report_time = time (NULL);
   report_tm_p = localtime (&report_time);
@@ -2084,7 +2084,7 @@ checksumdb (UTIL_FUNCTION_ARG * arg)
   char *excl_class_file = NULL;
   char *checksum_table = NULL;
   bool report_only = false;
-  ha_operations::SERVER_STATE ha_state = ha_operations::SERVER_STATE_NA;
+  HA_SERVER_STATE ha_state = ha_operations::SERVER_STATE_NA;
   int error = NO_ERROR, ret;
 
   memset (&chksum_arg, 0, sizeof (CHKSUM_ARG));

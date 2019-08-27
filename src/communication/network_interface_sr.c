@@ -3559,14 +3559,14 @@ void
 sboot_change_ha_mode (THREAD_ENTRY * thread_p, unsigned int rid, char *request, int reqlen)
 {
   int req_state, force, timeout;
-  ha_operations::SERVER_STATE state;
+  HA_SERVER_STATE state;
   DB_INFO *db;
   char *ptr;
   OR_ALIGNED_BUF (OR_INT_SIZE) a_reply;
   char *reply = OR_ALIGNED_BUF_START (a_reply);
 
   ptr = or_unpack_int (request, &req_state);
-  state = (ha_operations::SERVER_STATE) req_state;
+  state = (HA_SERVER_STATE) req_state;
   ptr = or_unpack_int (ptr, &force);
   ptr = or_unpack_int (ptr, &timeout);
 

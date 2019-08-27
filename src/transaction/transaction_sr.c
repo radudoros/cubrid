@@ -736,7 +736,7 @@ xtran_should_connection_reset (THREAD_ENTRY * thread_p, bool has_updated)
 {
   int client_type;
   const char *hostname;
-  ha_operations::SERVER_STATE ha_state;
+  HA_SERVER_STATE ha_state;
   bool should_conn_reset = false;
 
   client_type = logtb_find_current_client_type (thread_p);

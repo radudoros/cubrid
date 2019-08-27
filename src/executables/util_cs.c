@@ -2430,7 +2430,7 @@ changemode (UTIL_FUNCTION_ARG * arg)
   const char *database_name;
   char *mode_name;
   int error;
-  ha_operations::SERVER_STATE ha_state = ha_operations::SERVER_STATE_NA;
+  HA_SERVER_STATE ha_state = ha_operations::SERVER_STATE_NA;
   bool force;
   int timeout;
 
@@ -2472,7 +2472,7 @@ changemode (UTIL_FUNCTION_ARG * arg)
 	      goto error_exit;
 	    }
 	}
-      ha_state = (ha_operations::SERVER_STATE) keyval;
+      ha_state = (HA_SERVER_STATE) keyval;
       if (!(ha_state == ha_operations::SERVER_STATE_ACTIVE || ha_state == ha_operations::SERVER_STATE_STANDBY
 	    || ha_state == ha_operations::SERVER_STATE_MAINTENANCE))
 	{
@@ -2532,7 +2532,7 @@ changemode (UTIL_FUNCTION_ARG * arg)
 		   msgcat_message (MSGCAT_CATALOG_UTILS, MSGCAT_UTIL_SET_CHANGEMODE, CHANGEMODE_MSG_SERVER_MODE),
 		   database_name, mode_name);
 	}
-      ha_state = (ha_operations::SERVER_STATE) keyval;
+      ha_state = (HA_SERVER_STATE) keyval;
     }
   else
     {

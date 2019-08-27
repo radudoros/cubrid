@@ -751,10 +751,10 @@ static void
 css_process_change_server_ha_mode_request (SOCKET master_fd)
 {
 #if !defined(WINDOWS)
-  ha_operations::SERVER_STATE state;
+  HA_SERVER_STATE state;
   THREAD_ENTRY *thread_p;
 
-  state = (ha_operations::SERVER_STATE) css_get_master_request (master_fd);
+  state = (HA_SERVER_STATE) css_get_master_request (master_fd);
 
   thread_p = thread_get_thread_entry_info ();
   assert (thread_p != NULL);
@@ -771,7 +771,7 @@ css_process_change_server_ha_mode_request (SOCKET master_fd)
       er_log_debug (ARG_FILE_LINE, "ERROR : unexpected state. (state :%d). \n", state);
     }
 
-  state = (ha_operations::SERVER_STATE) htonl ((int) ha_operations::get_server_state ());
+  state = (HA_SERVER_STATE) htonl ((int) ha_operations::get_server_state ());
 
   css_send_heartbeat_request (css_Master_conn, SERVER_CHANGE_HA_MODE);
   css_send_heartbeat_data (css_Master_conn, (char *) &state, sizeof (state));
@@ -2065,7 +2065,7 @@ css_check_ha_server_state_for_client (THREAD_ENTRY * thread_p, int whence)
 #define FROM_REGISTER_CLIENT    1
 #define FROM_UNREGISTER_CLIENT  2
   int err = NO_ERROR;
-  ha_operations::SERVER_STATE state;
+  HA_SERVER_STATE state;
 
   /* csect_enter (thread_p, CSECT_HA_SERVER_STATE, INF_WAIT); */
 
@@ -2167,7 +2167,7 @@ int
 css_notify_ha_log_applier_state (THREAD_ENTRY * thread_p, HA_LOG_APPLIER_STATE state)
 {
   HA_LOG_APPLIER_STATE_TABLE *table;
-  ha_operations::SERVER_STATE server_state;
+  HA_SERVER_STATE server_state;
   int i, client_id;
 
   assert (state >= HA_LOG_APPLIER_STATE_UNREGISTERED && state <= HA_LOG_APPLIER_STATE_ERROR);

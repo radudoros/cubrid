@@ -2871,7 +2871,7 @@ db_get_host_connected (void)
 int
 db_get_ha_server_state (char *buffer, int maxlen)
 {
-  ha_operations::SERVER_STATE ha_state;
+  HA_SERVER_STATE ha_state;
 
   CHECK_CONNECT_ERROR ();
 

@@ -209,10 +209,8 @@ extern int boot_copy (const char *from_dbname, const char *new_db_name, const ch
 		      const char *new_db_server_host, const char *new_volext_path,
 		      const char *fileof_vols_and_copypaths, bool newdb_overwrite);
 extern int boot_emergency_patch (const char *db_name, bool recreate_log, DKNPAGES log_npages, const char *db_locale,
-/* *INDENT-OFF* */
-extern ha_operations::SERVER_STATE boot_change_ha_mode (ha_operations::SERVER_STATE state, bool force, int timeout);
-/* *INDENT-ON* */
 				 FILE * out_fp);
+extern HA_SERVER_STATE boot_change_ha_mode (HA_SERVER_STATE state, bool force, int timeout);
 extern int boot_notify_ha_log_applier_state (HA_LOG_APPLIER_STATE state);
 extern char *stats_get_statistics_from_server (OID * classoid, unsigned int timestamp, int *length_ptr);
 extern int stats_update_statistics (OID * classoid, int with_fullscan);

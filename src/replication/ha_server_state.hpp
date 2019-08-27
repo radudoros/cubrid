@@ -43,4 +43,6 @@ namespace ha_operations
 #endif
 }
 
+using HA_SERVER_STATE = ha_operations::SERVER_STATE;
+
 #endif // !_HA_SERVER_STATE_HPP_

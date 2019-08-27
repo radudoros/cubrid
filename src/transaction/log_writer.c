@@ -678,9 +678,9 @@ logwr_set_hdr_and_flush_info (void)
 	  && hdr.ha_server_state != ha_operations::SERVER_STATE_TO_BE_ACTIVE
 	  && hdr.ha_server_state != ha_operations::SERVER_STATE_TO_BE_STANDBY && (hdr.ha_promotion_time == 0
 										  || difftime64 (hdr.ha_promotion_time,
-												 logwr_Gl.hdr.
-												 ha_promotion_time) ==
-										  0)
+												 logwr_Gl.
+												 hdr.ha_promotion_time)
+										  == 0)
 	  && difftime64 (hdr.db_restore_time, logwr_Gl.hdr.db_restore_time) != 0)
 	{
 	  logwr_Gl.reinit_copylog = true;
@@ -1133,14 +1133,14 @@ logwr_flush_header_page (void)
       string_buffer error_msg;
       error_msg ("change the state of HA server (%s@%s) from '%s' to '%s'", logwr_Gl.db_name,
 		 (logwr_Gl.hostname != NULL) ? logwr_Gl.hostname : "unknown",
-		 ha_operations::server_state_string ((ha_operations::SERVER_STATE) prev_ha_server_state),
-		 ha_operations::server_state_string ((ha_operations::SERVER_STATE) logwr_Gl.hdr.ha_server_state));
+		 ha_operations::server_state_string ((HA_SERVER_STATE) prev_ha_server_state),
+		 ha_operations::server_state_string ((HA_SERVER_STATE) logwr_Gl.hdr.ha_server_state));
       er_set (ER_NOTIFICATION_SEVERITY, ARG_FILE_LINE, ER_HA_GENERIC_ERROR, 1, error_msg.get_buffer ());
     }
   prev_ha_server_state = logwr_Gl.hdr.ha_server_state;
 
   logwr_er_log ("logwr_flush_header_page, ha_server_state=%s, ha_file_status=%s\n",
-		ha_operations::server_state_string ((ha_operations::SERVER_STATE) logwr_Gl.hdr.ha_server_state),
+		ha_operations::server_state_string ((HA_SERVER_STATE) logwr_Gl.hdr.ha_server_state),
 		logwr_log_ha_filestat_to_string ((LOG_HA_FILESTAT) logwr_Gl.hdr.ha_file_status));
 }
 
