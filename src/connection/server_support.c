@@ -2154,10 +2154,6 @@ css_check_ha_log_applier_working (void)
   return false;
 }
 
-// *INDENT-OFF*
-
-// *INDENT-ON*
-
 /*
  * css_notify_ha_server_mode - notify the log applier's HA state
  *   return: NO_ERROR or ER_FAILED
