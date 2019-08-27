@@ -32,49 +32,144 @@
 
 namespace ha_operations
 {
+  struct server_state_transition_entry
+  {
+    SERVER_STATE cur_state;
+    SERVER_STATE req_state;
+    SERVER_STATE next_state;
+  };
+
+  std::vector<server_state_transition_entry> server_state_transition_table =
+  {
+    /* idle -> active */
+    {SERVER_STATE_IDLE, SERVER_STATE_ACTIVE, SERVER_STATE_ACTIVE},
+    /* idle -> to-be-standby */
+    {SERVER_STATE_IDLE, SERVER_STATE_STANDBY, SERVER_STATE_TO_BE_STANDBY},
+    /* idle -> maintenance */
+    {SERVER_STATE_IDLE, SERVER_STATE_MAINTENANCE, SERVER_STATE_MAINTENANCE},
+    /* active -> active */
+    {SERVER_STATE_ACTIVE, SERVER_STATE_ACTIVE, SERVER_STATE_ACTIVE},
+    /* active -> to-be-standby */
+    {SERVER_STATE_ACTIVE, SERVER_STATE_STANDBY, SERVER_STATE_TO_BE_STANDBY},
+    /* to-be-active -> active */
+    {SERVER_STATE_TO_BE_ACTIVE, SERVER_STATE_ACTIVE, SERVER_STATE_ACTIVE},
+    /* standby -> standby */
+    {SERVER_STATE_STANDBY, SERVER_STATE_STANDBY, SERVER_STATE_STANDBY},
+    /* standby -> to-be-active */
+    {SERVER_STATE_STANDBY, SERVER_STATE_ACTIVE, SERVER_STATE_TO_BE_ACTIVE},
+    /* statndby -> maintenance */
+    {SERVER_STATE_STANDBY, SERVER_STATE_MAINTENANCE, SERVER_STATE_MAINTENANCE},
+    /* to-be-standby -> standby */
+    {SERVER_STATE_TO_BE_STANDBY, SERVER_STATE_STANDBY, SERVER_STATE_STANDBY},
+    /* maintenance -> standby */
+    {SERVER_STATE_MAINTENANCE, SERVER_STATE_STANDBY, SERVER_STATE_TO_BE_STANDBY}
+  };
+
+  std::recursive_mutex state_mtx;
+
+  static void handle_force_change_state (cubthread::entry *thread_p, SERVER_STATE req_state);
+  static SERVER_STATE handle_maintenance_change_state (cubthread::entry *thread_p, SERVER_STATE state, int timeout);
+
+  void handle_force_change_state (cubthread::entry *thread_p, SERVER_STATE req_state)
+  {
+    if (get_server_state () != req_state)
+      {
+	er_log_debug (ARG_FILE_LINE, "css_change_ha_server_state: set force from %s to state %s\n",
+		      server_state_string (get_server_state ()), server_state_string (req_state));
+
+	if (req_state == SERVER_STATE_ACTIVE)
+	  {
+	    er_log_debug (ARG_FILE_LINE, "css_change_ha_server_state: logtb_enable_update()\n");
+	    if (!HA_DISABLED ())
+	      {
+		// todo: force interruptions
+		cubreplication::replication_node_manager::start_commute_to_master_state (thread_p, true);
+		cubreplication::replication_node_manager::wait_commute (get_server_state (), SERVER_STATE_ACTIVE);
+	      }
+	    else
+	      {
+		logtb_enable_update (thread_p);
+		get_server_state () = req_state;
+	      }
+	  }
+	else if (req_state == SERVER_STATE_STANDBY)
+	  {
+	    assert (!HA_DISABLED ());
+	    cubreplication::replication_node_manager::start_commute_to_slave_state (thread_p, true);
+	    cubreplication::replication_node_manager::wait_commute (get_server_state (), SERVER_STATE_STANDBY);
+	  }
+	else
+	  {
+	    get_server_state () = req_state;
+	  }
+
+	if (get_server_state () == SERVER_STATE_ACTIVE)
+	  {
+	    log_set_ha_promotion_time (thread_p, ((INT64) time (0)));
+	  }
+      }
+    if (req_state == SERVER_STATE_ACTIVE || req_state == SERVER_STATE_STANDBY)
+      {
+	// desired state was enforced
+	assert (get_server_state () == req_state);
+      }
+  }
+
+  SERVER_STATE handle_maintenance_change_state (cubthread::entry *thread_p, SERVER_STATE state, int timeout)
+  {
+    state = transit_server_state (thread_p, SERVER_STATE_MAINTENANCE);
+    if (state == SERVER_STATE_NA)
+      {
+	return state;
+      }
+
+    if (state == SERVER_STATE_MAINTENANCE)
+      {
+	er_log_debug (ARG_FILE_LINE, "css_change_ha_server_state: logtb_enable_update() \n");
+	logtb_enable_update (thread_p);
+
+	boot_server_status (BOOT_SERVER_MAINTENANCE);
+      }
+
+    for (int i = 0; i < timeout; ++i)
+      {
+	/* waiting timeout second while transaction terminated normally. */
+	if (logtb_count_not_allowed_clients_in_maintenance_mode (thread_p) == 0)
+	  {
+	    break;
+	  }
+	thread_sleep (1000);	/* 1000 msec */
+      }
+
+    if (logtb_count_not_allowed_clients_in_maintenance_mode (thread_p) != 0)
+      {
+	LOG_TDES *tdes;
+
+	/* try to kill transaction. */
+	TR_TABLE_CS_ENTER (thread_p);
+	// start from transaction index i = 1; system transaction cannot be killed
+	for (int i = 1; i < log_Gl.trantable.num_total_indices; ++i)
+	  {
+	    tdes = log_Gl.trantable.all_tdes[i];
+	    if (tdes != NULL && tdes->trid != NULL_TRANID)
+	      {
+		if (!BOOT_IS_ALLOWED_CLIENT_TYPE_IN_MT_MODE (tdes->client.get_host_name (), boot_Host_name,
+		    tdes->client.client_type))
+		  {
+		    logtb_slam_transaction (thread_p, tdes->tran_index);
+		  }
+	      }
+	  }
+	TR_TABLE_CS_EXIT (thread_p);
+
+	thread_sleep (2000);	/* 2000 msec */
+      }
+    return state;
+  }
 
   SERVER_STATE
   transit_server_state (cubthread::entry *thread_p, SERVER_STATE req_state)
   {
-    struct ha_server_state_transition_table
-    {
-      SERVER_STATE cur_state;
-      SERVER_STATE req_state;
-      SERVER_STATE next_state;
-    };
-    static struct ha_server_state_transition_table ha_Server_state_transition[] =
-    {
-      /* idle -> active */
-      {SERVER_STATE_IDLE, SERVER_STATE_ACTIVE, SERVER_STATE_ACTIVE},
-#if 0
-      /* idle -> to-be-standby */
-      {SERVER_STATE_IDLE, SERVER_STATE_STANDBY, SERVER_STATE_TO_BE_STANDBY},
-#else
-      /* idle -> standby */
-      {SERVER_STATE_IDLE, SERVER_STATE_STANDBY, SERVER_STATE_STANDBY},
-#endif
-      /* idle -> maintenance */
-      {SERVER_STATE_IDLE, SERVER_STATE_MAINTENANCE, SERVER_STATE_MAINTENANCE},
-      /* active -> active */
-      {SERVER_STATE_ACTIVE, SERVER_STATE_ACTIVE, SERVER_STATE_ACTIVE},
-      /* active -> to-be-standby */
-      {SERVER_STATE_ACTIVE, SERVER_STATE_STANDBY, SERVER_STATE_TO_BE_STANDBY},
-      /* to-be-active -> active */
-      {SERVER_STATE_TO_BE_ACTIVE, SERVER_STATE_ACTIVE, SERVER_STATE_ACTIVE},
-      /* standby -> standby */
-      {SERVER_STATE_STANDBY, SERVER_STATE_STANDBY, SERVER_STATE_STANDBY},
-      /* standby -> to-be-active */
-      {SERVER_STATE_STANDBY, SERVER_STATE_ACTIVE, SERVER_STATE_TO_BE_ACTIVE},
-      /* statndby -> maintenance */
-      {SERVER_STATE_STANDBY, SERVER_STATE_MAINTENANCE, SERVER_STATE_MAINTENANCE},
-      /* to-be-standby -> standby */
-      {SERVER_STATE_TO_BE_STANDBY, SERVER_STATE_STANDBY, SERVER_STATE_STANDBY},
-      /* maintenance -> standby */
-      {SERVER_STATE_MAINTENANCE, SERVER_STATE_STANDBY, SERVER_STATE_TO_BE_STANDBY},
-      /* end of table */
-      {SERVER_STATE_NA, SERVER_STATE_NA, SERVER_STATE_NA}
-    };
-    struct ha_server_state_transition_table *table;
     SERVER_STATE new_state = SERVER_STATE_NA;
 
     if (get_server_state () == req_state)
@@ -82,17 +177,15 @@ namespace ha_operations
 	return req_state;
       }
 
-    csect_enter (thread_p, CSECT_HA_SERVER_STATE, INF_WAIT);
+    std::lock_guard<std::recursive_mutex> lg (state_mtx);
 
-    for (table = ha_Server_state_transition; table->cur_state != SERVER_STATE_NA; table++)
+    for (auto entry : server_state_transition_table)
       {
-	if (table->cur_state == get_server_state () && table->req_state == req_state)
+	if (entry.cur_state == get_server_state () && entry.req_state == req_state)
 	  {
-	    er_log_debug (ARG_FILE_LINE, "css_transit_ha_server_state: " "ha_Server_state (%s) -> (%s)\n",
-			  server_state_string (get_server_state ()), server_state_string (table->next_state));
-	    new_state = table->next_state;
-	    /* append a dummy log record for LFT to wake LWTs up */
-	    log_append_ha_server_state (thread_p, new_state);
+	    er_log_debug (ARG_FILE_LINE, "css_transit_ha_server_state: ha_Server_state (%s) -> (%s)\n",
+			  server_state_string (get_server_state ()), server_state_string (entry.next_state));
+	    new_state = entry.next_state;
 	    if (!HA_DISABLED ())
 	      {
 		er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_CSS_SERVER_HA_MODE_CHANGE, 2,
@@ -112,7 +205,6 @@ namespace ha_operations
 	  }
       }
 
-    csect_exit (thread_p, CSECT_HA_SERVER_STATE);
     return new_state;
   }
 
@@ -141,7 +233,7 @@ namespace ha_operations
   }
 
   /*
-   * css_change_ha_server_state - change the server's HA state
+   * change_server_state - change the server's HA state
    *   return: NO_ERROR or ER_FAILED
    *   state(in): new state for server to be
    *   force(in): force to change
@@ -151,23 +243,19 @@ namespace ha_operations
   int
   change_server_state (cubthread::entry *thread_p, SERVER_STATE state, bool force, int timeout, bool heartbeat)
   {
-    SERVER_STATE orig_state;
-    int i;
-
     er_log_debug (ARG_FILE_LINE, "css_change_ha_server_state: ha_Server_state %s state %s force %c heartbeat %c\n",
 		  server_state_string (get_server_state ()), server_state_string (state), (force ? 't' : 'f'),
 		  (heartbeat ? 't' : 'f'));
 
     assert (state >= SERVER_STATE_IDLE && state <= SERVER_STATE_DEAD);
 
-    csect_enter (thread_p, CSECT_HA_SERVER_STATE, INF_WAIT);
+    std::lock_guard<std::recursive_mutex> lg (state_mtx);
 
     // Return early if we are in the state we want to be in or if we already are transitioning to the requested state
     if (state == get_server_state ()
 	|| (!force && get_server_state () == SERVER_STATE_TO_BE_ACTIVE && state == SERVER_STATE_ACTIVE)
 	|| (!force && get_server_state () == SERVER_STATE_TO_BE_STANDBY && state == SERVER_STATE_STANDBY))
       {
-	csect_exit (thread_p, CSECT_HA_SERVER_STATE);
 	return NO_ERROR;
       }
 
@@ -175,73 +263,34 @@ namespace ha_operations
 	&& ! (get_server_state () == SERVER_STATE_MAINTENANCE && state == SERVER_STATE_STANDBY)
 	&& ! (force && get_server_state () == SERVER_STATE_TO_BE_ACTIVE && state == SERVER_STATE_ACTIVE))
       {
-	csect_exit (thread_p, CSECT_HA_SERVER_STATE);
 	return NO_ERROR;
       }
 
-    orig_state = get_server_state ();
-
     if (force)
       {
-	if (get_server_state () != state)
+	// Do 1 phase transitions
+	handle_force_change_state (thread_p, state);
+	if (get_server_state () == SERVER_STATE_ACTIVE)
 	  {
-	    er_log_debug (ARG_FILE_LINE, "css_change_ha_server_state: set force from %s to state %s\n",
-			  server_state_string (get_server_state ()), server_state_string (state));
-
-	    if (state == SERVER_STATE_ACTIVE)
-	      {
-		er_log_debug (ARG_FILE_LINE, "css_change_ha_server_state: logtb_enable_update()\n");
-		if (!HA_DISABLED ())
-		  {
-		    // todo: force interruptions
-		    cubreplication::replication_node_manager::start_commute_to_master_state (thread_p, true);
-		    cubreplication::replication_node_manager::wait_commute (get_server_state (), SERVER_STATE_ACTIVE);
-		  }
-		else
-		  {
-		    logtb_enable_update (thread_p);
-		    get_server_state () = state;
-		  }
-	      }
-	    else if (state == SERVER_STATE_STANDBY)
-	      {
-		assert (!HA_DISABLED ());
-		cubreplication::replication_node_manager::start_commute_to_slave_state (thread_p, true);
-		cubreplication::replication_node_manager::wait_commute (get_server_state (), SERVER_STATE_STANDBY);
-	      }
-	    else
-	      {
-		get_server_state () = state;
-	      }
-
-	    // TODO: investigate the need for log_append
-	    /* append a dummy log record for LFT to wake LWTs up */
-	    log_append_ha_server_state (thread_p, state);
-
-	    if (get_server_state () == SERVER_STATE_ACTIVE)
-	      {
-		log_set_ha_promotion_time (thread_p, ((INT64) time (0)));
-	      }
+	    // todo: why is this called on each transition to ACTIVE (check no-force case)?
+	    css_start_all_threads ();
 	  }
-	if (state == SERVER_STATE_ACTIVE || state == SERVER_STATE_STANDBY)
-	  {
-	    // desired state was enforced
-	    assert (get_server_state () == state);
-	  }
-	csect_exit (thread_p, CSECT_HA_SERVER_STATE);
 	return NO_ERROR;
       }
 
     switch (state)
       {
       case SERVER_STATE_ACTIVE:
+	// Phase 1: transit to SERVER_STATE_TO_BE_ACTIVE
 	state = transit_server_state (thread_p, SERVER_STATE_ACTIVE);
 	if (state == SERVER_STATE_NA)
 	  {
 	    break;
 	  }
+
 	if (!HA_DISABLED () && state == SERVER_STATE_TO_BE_ACTIVE)
 	  {
+	    // Phase 2: task will transit to SERVER_STATE_ACTIVE
 	    cubreplication::replication_node_manager::start_commute_to_master_state (thread_p, false);
 	  }
 
@@ -250,85 +299,43 @@ namespace ha_operations
 	    assert (state == SERVER_STATE_TO_BE_ACTIVE);
 
 	    logtb_enable_update (thread_p);
+	    // Phase 2: transit to SERVER_STATE_ACTIVE
 	    state = transit_server_state (thread_p, SERVER_STATE_ACTIVE);
 	  }
 	break;
 
       case SERVER_STATE_STANDBY:
+      {
+	SERVER_STATE orig_state = get_server_state ();
+	// Phase 1: transit to SERVER_STATE_TO_BE_STANDBY
 	state = transit_server_state (thread_p, SERVER_STATE_STANDBY);
 	if (state == SERVER_STATE_NA)
 	  {
 	    break;
 	  }
 
+	if (state == SERVER_STATE_TO_BE_STANDBY)
+	  {
+	    assert (!HA_DISABLED ());
+	    // Phase 2: task will transit to SERVER_STATE_STANDBY
+	    cubreplication::replication_node_manager::start_commute_to_slave_state (thread_p, false);
+	  }
+
 	if (orig_state == SERVER_STATE_MAINTENANCE)
 	  {
 	    boot_server_status (BOOT_SERVER_UP);
 	  }
-
-	if (state == SERVER_STATE_STANDBY)
-	  {
-	    assert (!HA_DISABLED ());
-	    cubreplication::replication_node_manager::start_commute_to_slave_state (thread_p, false);
-	  }
-	break;
+      }
+      break;
 
       case SERVER_STATE_MAINTENANCE:
-	state = transit_server_state (thread_p, SERVER_STATE_MAINTENANCE);
-	if (state == SERVER_STATE_NA)
-	  {
-	    break;
-	  }
-
-	if (state == SERVER_STATE_MAINTENANCE)
-	  {
-	    er_log_debug (ARG_FILE_LINE, "css_change_ha_server_state: logtb_enable_update() \n");
-	    logtb_enable_update (thread_p);
-
-	    boot_server_status (BOOT_SERVER_MAINTENANCE);
-	  }
-
-	for (i = 0; i < timeout; i++)
-	  {
-	    /* waiting timeout second while transaction terminated normally. */
-	    if (logtb_count_not_allowed_clients_in_maintenance_mode (thread_p) == 0)
-	      {
-		break;
-	      }
-	    thread_sleep (1000);	/* 1000 msec */
-	  }
-
-	if (logtb_count_not_allowed_clients_in_maintenance_mode (thread_p) != 0)
-	  {
-	    LOG_TDES *tdes;
-
-	    /* try to kill transaction. */
-	    TR_TABLE_CS_ENTER (thread_p);
-	    // start from transaction index i = 1; system transaction cannot be killed
-	    for (i = 1; i < log_Gl.trantable.num_total_indices; i++)
-	      {
-		tdes = log_Gl.trantable.all_tdes[i];
-		if (tdes != NULL && tdes->trid != NULL_TRANID)
-		  {
-		    if (!BOOT_IS_ALLOWED_CLIENT_TYPE_IN_MT_MODE (tdes->client.get_host_name (), boot_Host_name,
-			tdes->client.client_type))
-		      {
-			logtb_slam_transaction (thread_p, tdes->tran_index);
-		      }
-		  }
-	      }
-	    TR_TABLE_CS_EXIT (thread_p);
-
-	    thread_sleep (2000);	/* 2000 msec */
-	  }
+	state = handle_maintenance_change_state (thread_p, state, timeout);
 	break;
 
       default:
 	state = SERVER_STATE_NA;
 	break;
       }
-
-    csect_exit (thread_p, CSECT_HA_SERVER_STATE);
 
     return (state != SERVER_STATE_NA) ? NO_ERROR : ER_FAILED;
   }
