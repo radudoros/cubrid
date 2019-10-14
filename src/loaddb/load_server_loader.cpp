@@ -33,6 +33,7 @@
 #include "locator_sr.h"
 #include "memory_alloc.h"
 #include "object_primitive.h"
+#include "object_representation_sr.h"
 #include "record_descriptor.hpp"
 #include "set_object.h"
 #include "string_opfunc.h"
@@ -112,6 +113,76 @@ namespace cubload
   {
     cubthread::entry &thread_ref = cubthread::get_entry ();
     return xlocator_find_class_oid (&thread_ref, class_name, &class_oid, BU_LOCK);
+  }
+
+  int
+  server_class_installer::check_is_schema_attribute (heap_cache_attrinfo &attrinfo, const std::string &att_name)
+  {
+    cubthread::entry &thread_ref = cubthread::get_entry ();
+
+    int error_code = NO_ERROR;
+    auto pred = [&thread_ref, &error_code, &att_name] (const or_attribute& att) -> bool
+    {
+      recdes recdes;
+      char *attr_name = NULL;
+      int free_attr_name = 0;
+      error_code = or_get_attrname (&recdes, att.id, &attr_name, &free_attr_name);
+      if (error_code != NO_ERROR)
+	{
+	  if (attr_name != NULL && free_attr_name == 1)
+	    {
+	      db_private_free_and_init (&thread_ref, attr_name);
+	    }
+	  return true;
+	}
+
+      bool found = false;
+      if (strcmp (att_name.c_str (), attr_name) == 0)
+	{
+	  found = true;
+	}
+
+      if (attr_name != NULL && free_attr_name == 1)
+	{
+	  db_private_free_and_init (&thread_ref, attr_name);
+	}
+      return found;
+    };
+
+    or_attribute *attrs;
+    int n_attrs;
+    get_class_attributes (attrinfo, LDR_ATTRIBUTE_SHARED, attrs, &n_attrs);
+
+    or_attribute *attr_end = attrs + n_attrs;
+    const or_attribute *found = std::find_if (attrs, attr_end, pred);
+    if (error_code != NO_ERROR)
+      {
+	m_error_handler.on_failure_with_line (LOADDB_MSG_LOAD_FAIL);
+	return error_code;
+      }
+    if (found != attr_end)
+      {
+	error_code = ER_LDR_SHARED_NOT_SUPPORTED;
+	er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_LDR_SHARED_NOT_SUPPORTED, 0);
+	return error_code;
+      }
+
+    get_class_attributes (attrinfo, LDR_ATTRIBUTE_CLASS, attrs, &n_attrs);
+    attr_end = attrs + n_attrs;
+    found = std::find_if (attrs, attr_end, pred);
+    if (error_code != NO_ERROR)
+      {
+	m_error_handler.on_failure_with_line (LOADDB_MSG_LOAD_FAIL);
+	return error_code;
+      }
+    if (found != attr_end)
+      {
+	error_code = ER_LDR_CLASS_NOT_SUPPORTED;
+	er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_LDR_CLASS_NOT_SUPPORTED, 0);
+	return error_code;
+      }
+
+    return NO_ERROR;
   }
 
   void
@@ -247,10 +318,17 @@ namespace cubload
 	auto found = attr_map.find (attr_name_);
 	if (found == attr_map.end ())
 	  {
-	    er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_SM_ATTRIBUTE_NOT_FOUND, 1, attr_name_.c_str ());
+	    if (check_is_schema_attribute (attrinfo, attr_name_) != NO_ERROR)
+	      {
+		ASSERT_ERROR ();
+	      }
+	    else
+	      {
+		er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_SM_ATTRIBUTE_NOT_FOUND, 1, attr_name_.c_str ());
+		m_error_handler.on_failure ();
+	      }
 	    heap_scancache_end (&thread_ref, &scancache);
 	    heap_attrinfo_end (&thread_ref, &attrinfo);
-	    m_error_handler.on_failure ();
 	    return;
 	  }
 
@@ -294,12 +372,10 @@ namespace cubload
     switch (attr_type)
       {
       case LDR_ATTRIBUTE_CLASS:
-	assert (false);
 	or_attributes = attrinfo.last_classrepr->class_attrs;
 	*n_attributes = attrinfo.last_classrepr->n_class_attrs;
 	break;
       case LDR_ATTRIBUTE_SHARED:
-	assert (false);
 	or_attributes = attrinfo.last_classrepr->shared_attrs;
 	*n_attributes = attrinfo.last_classrepr->n_shared_attrs;
 	break;
@@ -499,7 +575,6 @@ namespace cubload
     int force_count = 0;
     int pruning_type = 0;
     int op_type = MULTI_ROW_INSERT;
-    int records_inserted = 0;
     bool insert_errors_filtered = false;
     OID dummy_oid;
     bool has_BU_lock = lock_has_lock_on_object (&m_scancache.node.class_oid, oid_Root_class_oid, BU_LOCK);
